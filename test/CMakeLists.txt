@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(project_test
     ${CMAKE_SOURCE_DIR}/test/main.cc
     ${CMAKE_SOURCE_DIR}/test/Test_vec.cc
+    ${CMAKE_SOURCE_DIR}/test/Test_matrix.cc
 )
 
 add_executable(raytracer_test 

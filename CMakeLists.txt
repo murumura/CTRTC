@@ -12,13 +12,16 @@ include_directories(
     "${CMAKE_SOURCE_DIR}/src/shapes"
     "${CMAKE_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/include/primitives"
+    "${CMAKE_SOURCE_DIR}/include/utils"
     "${CMAKE_SOURCE_DIR}/include/shapes"
     "${CMAKE_SOURCE_DIR}/test"
     "${CMAKE_SOURCE_DIR}/scene"
 )
 
 set(project_headers
-    ${CMAKE_SOURCE_DIR}/include/primitives/vec.hh 
+    ${CMAKE_SOURCE_DIR}/include/primitives/vec.hh
+    ${CMAKE_SOURCE_DIR}/include/primitives/matrix.hh
+    ${CMAKE_SOURCE_DIR}/include/utils/math.hh
 )
 
 set(project_sources
