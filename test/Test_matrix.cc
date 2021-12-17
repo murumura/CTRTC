@@ -63,8 +63,7 @@ TEST(Mat, opeartor_plus)
     Matrix<double, 3, 4> m3 = {
         1., 2., 3., 4.,
         5., 6., 7., 8.,
-        9., 10., 11., 12.
-    };
+        9., 10., 11., 12.};
 
     m3 += 2.0;
     for (std::size_t i = 0; i < 3; i++)
@@ -75,4 +74,45 @@ TEST(Mat, opeartor_plus)
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
             ASSERT_EQ(m3[i][j], 2 * m1[i][j] + 2.0);
+}
+
+TEST(Mat, operator_minus)
+{
+
+    constexpr Matrix<double, 3, 4> m1 = {
+        1., 2., 3., 4.,
+        5., 6., 7., 8.,
+        9., 10., 11., 12.};
+
+    constexpr Matrix<double, 3, 4> m2 = {
+        1., 2., 3., 4.,
+        5., 6., 7., 8.,
+        9., 10., 11., 12.};
+    constexpr auto mNeg12 = m1 - m2;
+
+    for (std::size_t i = 0; i < 3; i++)
+        for (std::size_t j = 0; j < 4; j++)
+            ASSERT_EQ(mNeg12[i][j], 0);
+
+    constexpr auto m1Negate2 = m1 - 2.0;
+
+    for (std::size_t i = 0; i < 3; i++)
+        for (std::size_t j = 0; j < 4; j++)
+            ASSERT_EQ(m1Negate2[i][j], m1[i][j] - 2.0);
+
+    Matrix<double, 3, 4> m3 = {
+        1., 2., 3., 4.,
+        5., 6., 7., 8.,
+        9., 10., 11., 12.};
+
+    m3 -= 2.0;
+
+    for (std::size_t i = 0; i < 3; i++)
+        for (std::size_t j = 0; j < 4; j++)
+            ASSERT_EQ(m3[i][j], m1[i][j] - 2.0);
+    m3 -= m1;
+
+    for (std::size_t i = 0; i < 3; i++)
+        for (std::size_t j = 0; j < 4; j++)
+            ASSERT_EQ(m3[i][j], -2.0);
 }
