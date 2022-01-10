@@ -116,3 +116,103 @@ TEST(Mat, operator_minus)
         for (std::size_t j = 0; j < 4; j++)
             ASSERT_EQ(m3[i][j], -2.0);
 }
+
+TEST(Mat, operator_mul)
+{
+    constexpr Matrix<double, 4, 4> m1 = {1, 2, 3, 4,
+        2, 3, 4, 5,
+        3, 4, 5, 6,
+        4, 5, 6, 7};
+
+    constexpr Matrix<double, 4, 4> m2 = {0, 1, 2, 4,
+        1, 2, 4, 8,
+        2, 4, 8, 16,
+        4, 8, 16, 32};
+
+    constexpr Matrix<double, 4, 4> mMul12 = {24, 49, 98, 196,
+        31, 64, 128, 256,
+        38, 79, 158, 316,
+        45, 94, 188, 376};
+
+    ASSERT_EQ(mMul12.Rows, 4);
+    ASSERT_EQ(mMul12.Cols, 4);
+    ASSERT_EQ(mMul12, m1 * m2);
+    constexpr auto m1Mul2 = m1 * 2.0;
+    ASSERT_EQ(m1Mul2, m1 * 2.0);
+    ASSERT_EQ(m1Mul2, 2.0 * m1);
+    Matrix<double, 4, 4> m3 = m1;
+    m3 *= m1;
+    constexpr Matrix<double, 4, 4> m3Expected = {
+        30, 40, 50, 60,
+        40, 54, 68, 82,
+        50, 68, 86, 104,
+        60, 82, 104, 126};
+    ASSERT_EQ(m3, m3Expected);
+
+    constexpr Vec<double, 4> v1 = {1., 1., 1., 1.};
+    constexpr auto m1Mulv1 = m1 * v1;
+    ASSERT_EQ(m1Mulv1[0], 10.);
+    ASSERT_EQ(m1Mulv1[1], 14.);
+    ASSERT_EQ(m1Mulv1[2], 18.);
+    ASSERT_EQ(m1Mulv1[3], 22.);
+}
+
+TEST(Mat, operator_div)
+{
+    constexpr Matrix<double, 4, 4> m1 = {2, 4, 6, 8,
+        4, 8, 12, 16,
+        8, 16, 24, 32,
+        16, 32, 48, 64};
+
+    constexpr Matrix<double, 4, 4> m2 = {2, 2, 2, 2,
+        4, 4, 4, 4,
+        8, 8, 8, 8,
+        16, 16, 16, 16};
+
+    constexpr Matrix<double, 4, 4> mDiv12 = {1, 2, 3, 4,
+        1, 2, 3, 4,
+        1, 2, 3, 4,
+        1, 2, 3, 4};
+
+    constexpr Matrix<double, 4, 4> divide2Expected = {
+        1, 1, 1, 1,
+        2, 2, 2, 2,
+        4, 4, 4, 4,
+        8, 8, 8, 8};
+
+    ASSERT_EQ(mDiv12, m1 / m2);
+    ASSERT_EQ(divide2Expected, m2 / 2.0);
+
+    Matrix<double, 4, 4> m3 = m1;
+    m3 /= m2;
+    ASSERT_EQ(m3, m1 / m2);
+    m3 = m2;
+    m3 /= 2.0;
+    ASSERT_EQ(m3, divide2Expected);
+}
+
+TEST(Mat, transpose)
+{
+    constexpr Matrix<double, 3, 4> mat = {
+        1, 2, 3, 4,
+        2, 4, 4, 2,
+        8, 6, 4, 1};
+
+    const auto tranMat = Transpose(mat);
+    ASSERT_EQ(tranMat.Rows, 4);
+    ASSERT_EQ(tranMat.Cols, 3);
+    constexpr Matrix<double, 2, 3> m1 = {
+        0, 1, 2,
+        3, 4, 5};
+
+    constexpr Matrix<double, 3, 2> m2 = {
+        0, 3,
+        1, 4,
+        2, 5};
+    ASSERT_EQ(Transpose(m1), m2);
+    constexpr Matrix<double, 4, 4> I4 = PredefinedMatrices::I<double, 4>;
+
+    ASSERT_EQ(Transpose(I4), I4);
+    // transpose a transpose matrix should return itself
+    ASSERT_EQ(Transpose(Transpose(mat)), mat);
+}

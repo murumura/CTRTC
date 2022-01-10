@@ -40,6 +40,17 @@ namespace RayTracer {
          * row pointer.
         */
         constexpr T const* operator[](std::size_t rowIndex) const { return contents[rowIndex]; }
+
+        friend std::ostream& operator<<(std::ostream& stream, const Matrix& mat) noexcept
+        {
+            stream << "Matrix:( \n";
+            for (std::size_t i = 0; i < mat.Rows; ++i)
+                for (std::size_t j = 0; j < mat.Cols; ++j)
+                    stream << mat[i][j] << (j == mat.Cols - 1 ? "\n" : ", ");
+
+            return stream << ")";
+        }
+
         T contents[Rows][Cols];
     };
 
@@ -48,7 +59,7 @@ namespace RayTracer {
 
     namespace MatrixUtils {
         template <std::size_t R, std::size_t C, typename Func>
-        constexpr decltype(auto) Generate(Func&& func)
+        constexpr decltype(auto) Generate(Func&& func) noexcept
         {
             Matrix<std::invoke_result_t<Func, std::size_t, std::size_t>, R, C> generated = {};
             for (std::size_t i = 0; i < R; ++i) {
@@ -64,7 +75,7 @@ namespace RayTracer {
             typename ResultType = std::invoke_result_t<Func, T, typename Matrices::ValueType...>,
             std::size_t C = PrimitiveTraits::AllSameValue_v<std::size_t, Matrices::Cols...>,
             std::size_t R = PrimitiveTraits::AllSameValue_v<std::size_t, Matrices::Rows...>>
-        constexpr Matrix<T, R, C> ElementWise(Func func, const Matrix<T, R, C>& mat, const Matrices&... matrices)
+        constexpr Matrix<T, R, C> ElementWise(Func func, const Matrix<T, R, C>& mat, const Matrices&... matrices) noexcept
         {
             Matrix<ResultType, R, C> opApplied = {};
             for (std::size_t i = 0; i < R; ++i) {
@@ -78,7 +89,7 @@ namespace RayTracer {
     } // namespace MatrixUtils
 
     template <typename T, std::size_t R, std::size_t C>
-    constexpr bool operator==(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB)
+    constexpr bool operator==(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB) noexcept
     {
         for (std::size_t i = 0; i < R; ++i) {
             for (std::size_t j = 0; j < C; ++j) {
@@ -90,33 +101,33 @@ namespace RayTracer {
     }
 
     template <typename T, std::size_t R, std::size_t C>
-    constexpr bool operator!=(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB)
+    constexpr bool operator!=(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB) noexcept
     {
         return !(matA == matB);
     }
 
     /** Numerical negative, element-wise. */
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator-(const Matrix<T, R, C>& mat)
+    constexpr Matrix<T, R, C> operator-(const Matrix<T, R, C>& mat) noexcept
     {
         return MatrixUtils::ElementWise([](T x) { return -1.0 * x; }, mat);
     }
 
     /* Element-wise add */
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator+(const Matrix<T, R, C>& mat, T scalar)
+    constexpr Matrix<T, R, C> operator+(const Matrix<T, R, C>& mat, T scalar) noexcept
     {
         return MatrixUtils::ElementWise([scalar](T x) { return x + scalar; }, mat);
     }
 
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator+(T scalar, const Matrix<T, R, C>& mat)
+    constexpr Matrix<T, R, C> operator+(T scalar, const Matrix<T, R, C>& mat) noexcept
     {
         return MatrixUtils::ElementWise([scalar](T x) { return x + scalar; }, mat);
     }
 
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator+(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB)
+    constexpr Matrix<T, R, C> operator+(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB) noexcept
     {
         return MatrixUtils::ElementWise(std::plus<T>(), matA, matB);
     }
@@ -145,13 +156,13 @@ namespace RayTracer {
 
     /* Element-wise negation */
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator-(const Matrix<T, R, C>& mat, T scalar)
+    constexpr Matrix<T, R, C> operator-(const Matrix<T, R, C>& mat, T scalar) noexcept
     {
         return MatrixUtils::ElementWise([scalar](T x) { return x - scalar; }, mat);
     }
 
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator-(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB)
+    constexpr Matrix<T, R, C> operator-(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB) noexcept
     {
         return MatrixUtils::ElementWise(std::minus<T>(), matA, matB);
     }
@@ -180,39 +191,60 @@ namespace RayTracer {
 
     /* Element-wise mulplication */
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator*(const Matrix<T, R, C>& mat, T scalar)
+    constexpr Matrix<T, R, C> operator*(const Matrix<T, R, C>& mat, T scalar) noexcept
     {
         return MatrixUtils::ElementWise([scalar](T x) { return scalar * x; }, mat);
     }
 
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator*(T scalar, const Matrix<T, R, C>& mat)
+    constexpr Matrix<T, R, C> operator*(T scalar, const Matrix<T, R, C>& mat) noexcept
     {
         return MatrixUtils::ElementWise([scalar](T x) { return scalar * x; }, mat);
     }
 
-    template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator*(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB)
+    template <typename T, std::size_t R1, std::size_t C, std::size_t C2>
+    constexpr Matrix<T, R1, C2> operator*(const Matrix<T, R1, C>& matA, const Matrix<T, C, C2>& matB) noexcept
     {
-        return MatrixUtils::ElementWise(std::multiplies<T>(), matA, matB);
+        Matrix<T, R1, C2> ret{};
+        for (std::size_t row = 0u; row < R1; ++row)
+            for (std::size_t col = 0u; col < C2; ++col)
+                for (std::size_t c = 0u; c < C; ++c)
+                    ret[row][col] += matA[row][c] * matB[c][col];
+        return ret;
     }
 
-    template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C>& operator*=(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB) noexcept
+    // mat * mat only support square matrices
+    template <typename T, std::size_t D>
+    constexpr Matrix<T, D, D>& operator*=(Matrix<T, D, D>& matA, const Matrix<T, D, D>& matB) noexcept
     {
+        // since we need to write to A
+        Matrix<T, D, D> temp = matA;
+        matA = {};
+        for (std::size_t row = 0u; row < D; ++row)
+            for (std::size_t col = 0u; col < D; ++col)
+                for (std::size_t c = 0u; c < D; ++c)
+                    matA[row][col] += temp[row][c] * matB[c][col];
+        return matA;
+    }
+
+    // mat * vec
+    template <typename T, std::size_t R, std::size_t C>
+    constexpr Vec<T, C> operator*(const Matrix<T, R, C>& mat, const Vec<T, C>& vec) noexcept
+    {
+        Vec<T, C> ret{};
         for (std::size_t row = 0; row < R; row++) {
             for (std::size_t col = 0; col < C; col++) {
-                matA[row][col] *= matB[row][col];
+                ret[row] += mat[row][col] * vec[col];
             }
         }
-        return matA;
+        return ret;
     }
 
     template <typename T, std::size_t R, std::size_t C>
     constexpr Matrix<T, R, C>& operator*=(Matrix<T, R, C>& mat, T scalar) noexcept
     {
-        for (std::size_t row = 0; row < R; row++) {
-            for (std::size_t col = 0; col < C; col++) {
+        for (std::size_t row = 0u; row < R; row++) {
+            for (std::size_t col = 0u; col < C; col++) {
                 mat[row][col] *= scalar;
             }
         }
@@ -222,8 +254,8 @@ namespace RayTracer {
     template <typename T, std::size_t R, std::size_t C>
     constexpr Matrix<T, R, C>& operator*=(T scalar, Matrix<T, R, C>& mat) noexcept
     {
-        for (std::size_t row = 0; row < R; row++) {
-            for (std::size_t col = 0; col < C; col++) {
+        for (std::size_t row = 0u; row < R; row++) {
+            for (std::size_t col = 0u; col < C; col++) {
                 mat[row][col] *= scalar;
             }
         }
@@ -232,16 +264,69 @@ namespace RayTracer {
 
     /* Element-wise division */
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator/(const Matrix<T, R, C>& mat, T scalar)
+    constexpr Matrix<T, R, C> operator/(const Matrix<T, R, C>& mat, T scalar) noexcept
     {
         return MatrixUtils::ElementWise([scalar](T x) { return x / scalar; }, mat);
     }
 
     template <typename T, std::size_t R, std::size_t C>
-    constexpr Matrix<T, R, C> operator/(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB)
+    constexpr Matrix<T, R, C>& operator/=(Matrix<T, R, C>& mat, T scalar) noexcept
+    {
+        for (std::size_t row = 0u; row < R; row++) {
+            for (std::size_t col = 0u; col < C; col++) {
+                mat[row][col] /= scalar;
+            }
+        }
+        return mat;
+    }
+
+    template <typename T, std::size_t R, std::size_t C>
+    constexpr Matrix<T, R, C> operator/(const Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB) noexcept
     {
         return MatrixUtils::ElementWise(std::divides<T>(), matA, matB);
     }
+
+    template <typename T, std::size_t R, std::size_t C>
+    constexpr Matrix<T, R, C>& operator/=(Matrix<T, R, C>& matA, const Matrix<T, R, C>& matB) noexcept
+    {
+        for (std::size_t row = 0u; row < R; row++) {
+            for (std::size_t col = 0u; col < C; col++) {
+                matA[row][col] /= matB[row][col];
+            }
+        }
+        return matA;
+    }
+
+    /************************
+     * Matrix Utils         *
+    *************************/
+
+    template <typename T, std::size_t N>
+    constexpr Matrix<T, N, N> DiagonalMatrix(T diag)
+    {
+        return MatrixUtils::Generate<N, N>([diag](auto i, auto j) {
+            if (i == j)
+                return diag;
+            return T{};
+        });
+    }
+
+    template <typename T, std::size_t R, std::size_t C>
+    constexpr Matrix<T, C, R> Transpose(const Matrix<T, R, C>& mat)
+    {
+        return MatrixUtils::Generate<C, R>([&mat](auto i, auto j) {
+            return mat[j][i];
+        });
+    }
+
+    /************************
+    * Matrix Constants      *
+    *************************/
+
+    struct PredefinedMatrices {
+        template <typename T = double, std::size_t N = 4>
+        static constexpr Matrix<T, N, N> I = DiagonalMatrix<T, N>(1.0);
+    };
 
 } // namespace RayTracer
 
