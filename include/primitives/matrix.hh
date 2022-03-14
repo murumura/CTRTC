@@ -9,7 +9,7 @@
 namespace RayTracer {
 
     template <typename T, std::size_t R, std::size_t C, typename = typename std::enable_if_t<std::is_arithmetic_v<T>, T>>
-    class Matrix final {
+    class Matrix {
     public:
         static_assert(C > 0 && R > 0);
         static constexpr std::size_t Rows = R;
@@ -85,7 +85,6 @@ namespace RayTracer {
             }
             return opApplied;
         }
-
     } // namespace MatrixUtils
 
     template <typename T, std::size_t R, std::size_t C>
@@ -301,6 +300,13 @@ namespace RayTracer {
      * Matrix Utils         *
     *************************/
 
+    /* forward decalation to avoid function dependency */
+    template <typename T, std::size_t N>
+    constexpr T Cofactor(const Matrix<T, N, N>&, std::size_t, std::size_t);
+
+    template <typename T, std::size_t N>
+    constexpr T Determinant(const Matrix<T, N, N>& mat);
+
     template <typename T, std::size_t N>
     constexpr Matrix<T, N, N> DiagonalMatrix(T diag)
     {
@@ -319,6 +325,70 @@ namespace RayTracer {
         });
     }
 
+    template <typename T, std::size_t R, std::size_t C>
+    constexpr Matrix<T, R - 1, C - 1> SubMatrix(const Matrix<T, R, C>& mat, std::size_t omitRow, std::size_t omitCol)
+    {
+        Matrix<T, R - 1, C - 1> subMatrix{};
+        for (std::size_t row = 0u, subRow = 0u; row < R; row++) {
+            if (row == omitRow)
+                continue;
+            for (std::size_t col = 0u, subCol = 0u; col < C; col++) {
+                if (col == omitCol)
+                    continue;
+                subMatrix[subRow][subCol] = mat[row][col];
+                subCol++;
+            }
+            subRow++;
+        }
+        return subMatrix;
+    }
+
+    template <typename T>
+    constexpr T Determinant(const Matrix<T, 2, 2>& mat)
+    {
+        return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+    }
+
+    // minor(i,j) of matrix A is equal to det(sub(i,j)) of matrix A
+    template <typename T, std::size_t N>
+    constexpr T Minor(const Matrix<T, N, N>& mat, std::size_t omitRow, std::size_t omitCol)
+    {
+        return Determinant(SubMatrix(mat, omitRow, omitCol));
+    }
+
+    template <typename T, std::size_t N>
+    constexpr T Cofactor(const Matrix<T, N, N>& mat, std::size_t omitRow, std::size_t omitCol)
+    {
+        return ((omitRow + omitCol) % 2 ? -1 : 1) * Minor(mat, omitRow, omitCol);
+    }
+
+    template <typename T, std::size_t N>
+    constexpr T Determinant(const Matrix<T, N, N>& mat)
+    {
+        T result{};
+        for (std::size_t col = 0u; col < N; col++)
+            result += mat[0][col] * Cofactor(mat, 0, col);
+        return result;
+    }
+
+    template <typename T, std::size_t N>
+    constexpr bool Invertible(const Matrix<T, N, N>& mat)
+    {
+        return !MathUtils::ApproxEqual(Determinant(mat), 0);
+    }
+
+    template <typename T, std::size_t N>
+    constexpr Matrix<T, N, N> Inverse(const Matrix<T, N, N>& mat)
+    {
+        assert(Invertible(mat));
+        Matrix<T, N, N> result{};
+        for (int row = 0; row < N; row++) {
+            for (int col = 0; col < N; col++) {
+                result[col][row] = Cofactor(mat, row, col) / Determinant(mat);
+            }
+        }
+        return result;
+    }
     /************************
     * Matrix Constants      *
     *************************/
@@ -329,5 +399,4 @@ namespace RayTracer {
     };
 
 } // namespace RayTracer
-
 #endif

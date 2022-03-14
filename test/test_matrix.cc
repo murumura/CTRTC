@@ -194,25 +194,157 @@ TEST(Mat, operator_div)
 TEST(Mat, transpose)
 {
     constexpr Matrix<double, 3, 4> mat = {
-        1, 2, 3, 4,
-        2, 4, 4, 2,
-        8, 6, 4, 1};
+        1., 2., 3., 4.,
+        2., 4., 4., 2.,
+        8., 6., 4., 1.};
 
     const auto tranMat = Transpose(mat);
     ASSERT_EQ(tranMat.Rows, 4);
     ASSERT_EQ(tranMat.Cols, 3);
     constexpr Matrix<double, 2, 3> m1 = {
-        0, 1, 2,
-        3, 4, 5};
+        0., 1., 2.,
+        3., 4., 5.};
 
     constexpr Matrix<double, 3, 2> m2 = {
-        0, 3,
-        1, 4,
-        2, 5};
+        0., 3.,
+        1., 4.,
+        2., 5.};
     ASSERT_EQ(Transpose(m1), m2);
     constexpr Matrix<double, 4, 4> I4 = PredefinedMatrices::I<double, 4>;
 
     ASSERT_EQ(Transpose(I4), I4);
     // transpose a transpose matrix should return itself
     ASSERT_EQ(Transpose(Transpose(mat)), mat);
+}
+
+TEST(Mat, submatrix)
+{
+    constexpr Matrix<double, 3, 3> A = {
+        1., 5., 0.,
+        -3., 2., 7.,
+        0., 6., -3.};
+    constexpr Matrix<double, 2, 2> subA = SubMatrix(A, 0, 2);
+    constexpr Matrix<double, 2, 2> ExpectedSubA = {
+        -3., 2.,
+        0., 6.};
+    ASSERT_EQ(subA, ExpectedSubA);
+
+    constexpr Matrix<double, 4, 4> B = {
+        -6., 1., 1., 6.,
+        -8., 5., 8., 6.,
+        -1., 0., 8., 2.,
+        -7., 1., -1., 1.};
+    constexpr Matrix<double, 3, 3> ExpectedSubB = {
+        -6., 1., 6.,
+        -8., 8., 6.,
+        -7., -1., 1.};
+    constexpr Matrix<double, 3, 3> subB = SubMatrix(B, 2, 1);
+    ASSERT_EQ(subB, ExpectedSubB);
+}
+
+TEST(Mat, minor)
+{
+
+    constexpr Matrix<double, 3, 3> A = {
+        3., 5., 0.,
+        2., -1., -7.,
+        6., -1., 5.};
+    constexpr double expected = 25.;
+    constexpr auto minorA = Minor(A, 1, 0);
+    ASSERT_EQ(expected, minorA);
+}
+
+TEST(Mat, cofactor)
+{
+    constexpr Matrix<double, 3, 3> A = {
+        3., 5., 0.,
+        2., -1., -7.,
+        6., -1., 5.};
+    constexpr double expected = -25.;
+    constexpr auto cofactorA = Cofactor(A, 1, 0);
+    ASSERT_EQ(expected, cofactorA);
+    constexpr auto cf = Cofactor(A, 0, 0);
+    ASSERT_EQ(-12., cf);
+}
+
+TEST(Mat, determinant)
+{
+    constexpr Matrix<double, 3, 3> m = {1., 2., 6.,
+        -5., 8., -4.,
+        2., 6., 4.};
+
+    // Check that determinant is constexpr.
+    [[maybe_unused]] constexpr auto res1 = Determinant(m);
+    [[maybe_unused]] constexpr auto res2 = Cofactor(m, 0, 0);
+
+    ASSERT_EQ(res2, 56.);
+    ASSERT_EQ(res1, -196.);
+
+    constexpr Matrix<double, 4, 4> m2 = {
+        -2., -8., 3., 5.,
+        -3., 1., 7., 3.,
+        1., 2., -9., 6.,
+        -6., 7., 7., -9.};
+
+    [[maybe_unused]] constexpr auto res3 = Determinant(m2);
+    [[maybe_unused]] constexpr auto res4 = Cofactor(m2, 0, 0);
+    [[maybe_unused]] constexpr auto res5 = Cofactor(m2, 0, 1);
+    [[maybe_unused]] constexpr auto res6 = Cofactor(m2, 0, 2);
+    [[maybe_unused]] constexpr auto res7 = Cofactor(m2, 0, 3);
+
+    ASSERT_EQ(res3, -4071.);
+    ASSERT_EQ(res4, 690.);
+    ASSERT_EQ(res5, 447.);
+    ASSERT_EQ(res6, 210.);
+    ASSERT_EQ(res7, 51.);
+}
+
+TEST(Mat, invertible)
+{
+    constexpr Matrix<double, 4, 4> m = {
+        6., 4., 4., 4.,
+        5., 5., 7., 6.,
+        4., -9., 3., -7.,
+        9., 1., 7., -6.};
+    ASSERT_EQ(Determinant(m), -2120.);
+    ASSERT_TRUE(Invertible(m));
+    constexpr Matrix<double, 4, 4> m2 = {
+        -4., 2., -2., -3.,
+        9., 6., 2., 6.,
+        0, -5., 1., -5.,
+        0, 0, 0, 0};
+    ASSERT_FALSE(Invertible(m2));
+}
+
+TEST(Mat, inverse)
+{
+    constexpr Matrix<double, 4, 4> M = {
+        8., -5., 9., 2.,
+        7., 5., 6., 1.,
+        -6., -0, 9., 6.,
+        -3., 0, -9., -4.};
+    constexpr Matrix<double, 4, 4> mInv = Inverse(M);
+    constexpr Matrix<double, 4, 4> mInvExpected = {
+        -0.15385, -0.15385, -0.28205, -0.53846,
+        -0.07692, 0.12308, 0.02564, 0.03077,
+        0.35897, 0.35897, 0.43590, 0.92308,
+        -0.69231, -0.69231, -0.76923, -1.92308};
+    ASSERT_EQ(mInv, mInvExpected);
+
+    constexpr Matrix<double, 4, 4> M2 = {
+        9., 3., 0, 9.,
+        -5., -2., -6., -3.,
+        -4., 9., 6., 4.,
+        -7., 6., 6., 2.};
+    constexpr Matrix<double, 4, 4> m2InvExpected = {
+        -0.04074, -0.07778, 0.14444, -0.22222,
+        -0.07778, 0.03333, 0.36667, -0.33333,
+        -0.02901, -0.14630, -0.10926, 0.12963,
+        0.17778, 0.06667, -0.26667, 0.33333};
+    constexpr Matrix<double, 4, 4> invM2 = Inverse(M2);
+    ASSERT_EQ(invM2, m2InvExpected);
+
+    constexpr Matrix<double, 4, 4> I4 = PredefinedMatrices::I<double, 4>;
+    constexpr Matrix<double, 4, 4> I4_ = M2 * invM2;
+    ASSERT_EQ(I4, I4_);
 }

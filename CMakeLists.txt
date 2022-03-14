@@ -22,6 +22,9 @@ set(project_headers
     ${CMAKE_SOURCE_DIR}/include/primitives/vec.hh
     ${CMAKE_SOURCE_DIR}/include/primitives/matrix.hh
     ${CMAKE_SOURCE_DIR}/include/utils/math.hh
+    ${CMAKE_SOURCE_DIR}/include/transform.hh
+    ${CMAKE_SOURCE_DIR}/include/canvas.hh
+    ${CMAKE_SOURCE_DIR}/include/ray.hh
 )
 
 set(project_sources
