@@ -23,8 +23,8 @@ namespace RayTracer {
         constexpr static int MaxValue = 255;
     };
 
-    template <typename T, std::size_t N, typename = typename std::enable_if_t<std::is_arithmetic_v<T>, T>>
-    class Vec final {
+    template <typename T, std::size_t N>
+    requires(std::is_arithmetic_v<T>) class Vec final {
     public:
         static_assert(N > 0, "vector must contain at least one element");
         using ValueType = T;
@@ -91,12 +91,12 @@ namespace RayTracer {
         }
 
         std::array<ValueType, Length> contents;
-        //ValueType  contents[Length]; ///< @private
+        // ValueType  contents[Length]; ///< @private
     };
 
     /*  Constructs scalar vector from its arguments, checking that all arguments are of
-    *  the same type.
-    */
+     *  the same type.
+     */
     template <typename... Args>
     constexpr decltype(auto) CreateVector(Args... args)
     {
@@ -146,8 +146,8 @@ namespace RayTracer {
         }
 
         /*
-        *  Generates a vector containing consecutive elements spaced by 1.
-        */
+         *  Generates a vector containing consecutive elements spaced by 1.
+         */
         template <std::size_t N, typename T = double>
         constexpr Vec<T, N> SeqVec(T value = T())
         {
@@ -160,8 +160,8 @@ namespace RayTracer {
         }
 
         /*
-        *  Generates a vector as a function of its index.
-        */
+         *  Generates a vector as a function of its index.
+         */
         template <std::size_t N, typename Func>
         constexpr decltype(auto) Generate(Func&& func)
         {
@@ -310,7 +310,7 @@ namespace RayTracer {
         return vecA;
     }
 
-    /*  
+    /*
         ---------------------
         Tuple specialization
         ---------------------
@@ -350,9 +350,9 @@ namespace RayTracer {
     /*Need some speclization to make the flag unchanged*/
 
     /*
-        Operator overloading Tuple '+' / '+=' 
+        Operator overloading Tuple '+' / '+='
         Note:To follow the book's convention on point and vector flag,
-        we omit the equality comparison on 4th dimension of tuple instance if and only if the value of 
+        we omit the equality comparison on 4th dimension of tuple instance if and only if the value of
         4th dimension not belongs to one of TupleConstants::PointFlag, TupleConstants::VectorFlag
     */
     template <>
@@ -588,7 +588,7 @@ namespace RayTracer {
         static constexpr Tuple MaxPoint{MathUtils::MathConstants::NINF<>, MathUtils::MathConstants::NINF<>, MathUtils::MathConstants::NINF<>, TupleConstants::PointFlag};
     };
 
-    /*  
+    /*
         ---------------------
         Colour specialization
         ---------------------

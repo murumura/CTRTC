@@ -1,13 +1,6 @@
-TEST_DIR :=  ./test
-TEST_CXX_FILE := $(wildcard $(TEST_DIR)/*.cc)
-INC_DIR := ./include
-SHAPE_DIR := shapes
-PRIMITIVE_DIR := primitives
-UTILS_DIR := utils
-SRC_DIR := ./src
-INC_CXX_FILE := $(wildcard $(INC_DIR)/*.hh $(INC_DIR)/*.inl $(INC_DIR)/$(SHAPE_DIR)/*.hh $(INC_DIR)/$(PRIMITIVE_DIR)/*.hh $(INC_DIR)/$(UTILS_DIR)/*.hh)
-SCENE_DIR :=  ./scene
-SRC_FILE := $(wildcard $(SCENE_DIR)/*.cc $(SRC_DIR)/$(SHAPE_DIR)/*.cc $(SRC_DIR)/*.cc)
+TEST_FILE := $(wildcard ./test/*.cc)
+INC_FILE := $(wildcard ./include/primitives/*.hh  ./include/utils/*.hh ./include/*.hh)
+SCENE_FILE := $(wildcard ./scene/*.cc)
 DOCKER_DIR:= ./docker
 
 export BUILDTYPE ?= Debug
@@ -36,8 +29,8 @@ run-test: test
 
 .PHONY: format
 format:
-	@echo "Format: "$(TEST_CXX_FILE) $(INC_CXX_FILE) $(SRC_FILE)
-	clang-format -i $(TEST_CXX_FILE) $(INC_CXX_FILE) $(SRC_FILE)
+	@echo "Format: "$(TEST_FILE) $(INC_FILE) $(SCENE_FILE)
+	clang-format -i $(TEST_FILE) $(INC_FILE) $(SCENE_FILE)
 
 .PHONY: clean
 clean:

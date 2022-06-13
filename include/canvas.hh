@@ -38,7 +38,7 @@ namespace RayTracer {
             return buffer[(row * width + col)];
         }
 
-        constexpr void ToPPM(const std::string& fileName)
+        constexpr void ToPPM(const std::string& fileName) const
         {
             namespace fs = std::filesystem;
             std::ofstream ppm(fileName);

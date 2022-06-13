@@ -8,8 +8,8 @@
 
 namespace RayTracer {
 
-    template <typename T, std::size_t R, std::size_t C, typename = typename std::enable_if_t<std::is_arithmetic_v<T>, T>>
-    class Matrix {
+    template <typename T, std::size_t R, std::size_t C>
+    requires(std::is_arithmetic_v<T>) class Matrix {
     public:
         static_assert(C > 0 && R > 0);
         static constexpr std::size_t Rows = R;
@@ -29,16 +29,16 @@ namespace RayTracer {
             return VecUtils::Generate<Rows>([colIndex, this](std::size_t j) { return contents[j][colIndex]; });
         }
 
-        /* Returns a pointer to the specified row 
+        /* Returns a pointer to the specified row
          * The intention of this function is to then access the specified element from the
          * row pointer.
-        */
+         */
         constexpr T* operator[](std::size_t rowIndex) { return contents[rowIndex]; }
 
-        /* Returns a pointer to the specified row 
+        /* Returns a pointer to the specified row
          * The intention of this function is to then access the specified element from the
          * row pointer.
-        */
+         */
         constexpr T const* operator[](std::size_t rowIndex) const { return contents[rowIndex]; }
 
         friend std::ostream& operator<<(std::ostream& stream, const Matrix& mat) noexcept
@@ -298,7 +298,7 @@ namespace RayTracer {
 
     /************************
      * Matrix Utils         *
-    *************************/
+     *************************/
 
     /* forward decalation to avoid function dependency */
     template <typename T, std::size_t N>
@@ -390,8 +390,8 @@ namespace RayTracer {
         return result;
     }
     /************************
-    * Matrix Constants      *
-    *************************/
+     * Matrix Constants      *
+     *************************/
 
     struct PredefinedMatrices {
         template <typename T = double, std::size_t N = 4>

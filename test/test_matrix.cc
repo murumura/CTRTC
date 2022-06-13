@@ -1,4 +1,4 @@
-#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <matrix.hh>
 using namespace RayTracer;
@@ -11,9 +11,9 @@ TEST(Mat, constructor)
         1., 2., 3.,
         4., 5., 6.,
         7., 8., 9.};
-    ASSERT_EQ(m1[0][2], 3.);
-    ASSERT_EQ(m1[1][2], 6.);
-    ASSERT_EQ(m1[2][2], 9.);
+    EXPECT_EQ(m1[0][2], 3.);
+    EXPECT_EQ(m1[1][2], 6.);
+    EXPECT_EQ(m1[2][2], 9.);
     static_assert(m1.Row(2) == Vec{7., 8., 9.});
     static_assert(m1.Column(2) == Vec{3., 6., 9.});
 }
@@ -26,16 +26,16 @@ TEST(Mat, negate)
         9., 10., 11., 12.};
     constexpr auto m1Negative = -m1;
     ASSERT_NE(m1Negative, m1);
-    ASSERT_EQ(m1Negative[0][0], -1.);
-    ASSERT_EQ(m1Negative[0][1], -2.);
+    EXPECT_EQ(m1Negative[0][0], -1.);
+    EXPECT_EQ(m1Negative[0][1], -2.);
 
     constexpr auto m1NegativeRow2 = m1Negative.Row(2);
     constexpr auto m1NegativeRow2Expected = -Vec{9., 10., 11., 12.};
-    ASSERT_EQ(m1NegativeRow2, m1NegativeRow2Expected);
+    EXPECT_EQ(m1NegativeRow2, m1NegativeRow2Expected);
 
     constexpr auto m1NegativeCol0 = m1Negative.Column(0);
     constexpr auto m1NegativeCol0Expected = -Vec{1., 5., 9.};
-    ASSERT_EQ(m1NegativeCol0, m1NegativeCol0Expected);
+    EXPECT_EQ(m1NegativeCol0, m1NegativeCol0Expected);
 }
 
 TEST(Mat, opeartor_plus)
@@ -53,12 +53,12 @@ TEST(Mat, opeartor_plus)
     constexpr auto mSum12 = m1 + m2;
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(mSum12[i][j], 2 * (4 * i + j + 1));
+            EXPECT_EQ(mSum12[i][j], 2 * (4 * i + j + 1));
 
     constexpr auto m1Plus2 = m1 + 2.0;
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(m1Plus2[i][j], m1[i][j] + 2.0);
+            EXPECT_EQ(m1Plus2[i][j], m1[i][j] + 2.0);
 
     Matrix<double, 3, 4> m3 = {
         1., 2., 3., 4.,
@@ -68,12 +68,12 @@ TEST(Mat, opeartor_plus)
     m3 += 2.0;
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(m3[i][j], m1[i][j] + 2.0);
+            EXPECT_EQ(m3[i][j], m1[i][j] + 2.0);
     m3 += m1;
 
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(m3[i][j], 2 * m1[i][j] + 2.0);
+            EXPECT_EQ(m3[i][j], 2 * m1[i][j] + 2.0);
 }
 
 TEST(Mat, operator_minus)
@@ -92,13 +92,13 @@ TEST(Mat, operator_minus)
 
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(mNeg12[i][j], 0);
+            EXPECT_EQ(mNeg12[i][j], 0);
 
     constexpr auto m1Negate2 = m1 - 2.0;
 
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(m1Negate2[i][j], m1[i][j] - 2.0);
+            EXPECT_EQ(m1Negate2[i][j], m1[i][j] - 2.0);
 
     Matrix<double, 3, 4> m3 = {
         1., 2., 3., 4.,
@@ -109,12 +109,12 @@ TEST(Mat, operator_minus)
 
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(m3[i][j], m1[i][j] - 2.0);
+            EXPECT_EQ(m3[i][j], m1[i][j] - 2.0);
     m3 -= m1;
 
     for (std::size_t i = 0; i < 3; i++)
         for (std::size_t j = 0; j < 4; j++)
-            ASSERT_EQ(m3[i][j], -2.0);
+            EXPECT_EQ(m3[i][j], -2.0);
 }
 
 TEST(Mat, operator_mul)
@@ -134,12 +134,12 @@ TEST(Mat, operator_mul)
         38, 79, 158, 316,
         45, 94, 188, 376};
 
-    ASSERT_EQ(mMul12.Rows, 4);
-    ASSERT_EQ(mMul12.Cols, 4);
-    ASSERT_EQ(mMul12, m1 * m2);
+    EXPECT_EQ(mMul12.Rows, 4);
+    EXPECT_EQ(mMul12.Cols, 4);
+    EXPECT_EQ(mMul12, m1 * m2);
     constexpr auto m1Mul2 = m1 * 2.0;
-    ASSERT_EQ(m1Mul2, m1 * 2.0);
-    ASSERT_EQ(m1Mul2, 2.0 * m1);
+    EXPECT_EQ(m1Mul2, m1 * 2.0);
+    EXPECT_EQ(m1Mul2, 2.0 * m1);
     Matrix<double, 4, 4> m3 = m1;
     m3 *= m1;
     constexpr Matrix<double, 4, 4> m3Expected = {
@@ -147,14 +147,14 @@ TEST(Mat, operator_mul)
         40, 54, 68, 82,
         50, 68, 86, 104,
         60, 82, 104, 126};
-    ASSERT_EQ(m3, m3Expected);
+    EXPECT_EQ(m3, m3Expected);
 
     constexpr Vec<double, 4> v1 = {1., 1., 1., 1.};
     constexpr auto m1Mulv1 = m1 * v1;
-    ASSERT_EQ(m1Mulv1[0], 10.);
-    ASSERT_EQ(m1Mulv1[1], 14.);
-    ASSERT_EQ(m1Mulv1[2], 18.);
-    ASSERT_EQ(m1Mulv1[3], 22.);
+    EXPECT_EQ(m1Mulv1[0], 10.);
+    EXPECT_EQ(m1Mulv1[1], 14.);
+    EXPECT_EQ(m1Mulv1[2], 18.);
+    EXPECT_EQ(m1Mulv1[3], 22.);
 }
 
 TEST(Mat, operator_div)
@@ -180,15 +180,15 @@ TEST(Mat, operator_div)
         4, 4, 4, 4,
         8, 8, 8, 8};
 
-    ASSERT_EQ(mDiv12, m1 / m2);
-    ASSERT_EQ(divide2Expected, m2 / 2.0);
+    EXPECT_EQ(mDiv12, m1 / m2);
+    EXPECT_EQ(divide2Expected, m2 / 2.0);
 
     Matrix<double, 4, 4> m3 = m1;
     m3 /= m2;
-    ASSERT_EQ(m3, m1 / m2);
+    EXPECT_EQ(m3, m1 / m2);
     m3 = m2;
     m3 /= 2.0;
-    ASSERT_EQ(m3, divide2Expected);
+    EXPECT_EQ(m3, divide2Expected);
 }
 
 TEST(Mat, transpose)
@@ -199,8 +199,8 @@ TEST(Mat, transpose)
         8., 6., 4., 1.};
 
     const auto tranMat = Transpose(mat);
-    ASSERT_EQ(tranMat.Rows, 4);
-    ASSERT_EQ(tranMat.Cols, 3);
+    EXPECT_EQ(tranMat.Rows, 4);
+    EXPECT_EQ(tranMat.Cols, 3);
     constexpr Matrix<double, 2, 3> m1 = {
         0., 1., 2.,
         3., 4., 5.};
@@ -209,12 +209,12 @@ TEST(Mat, transpose)
         0., 3.,
         1., 4.,
         2., 5.};
-    ASSERT_EQ(Transpose(m1), m2);
+    EXPECT_EQ(Transpose(m1), m2);
     constexpr Matrix<double, 4, 4> I4 = PredefinedMatrices::I<double, 4>;
 
-    ASSERT_EQ(Transpose(I4), I4);
+    EXPECT_EQ(Transpose(I4), I4);
     // transpose a transpose matrix should return itself
-    ASSERT_EQ(Transpose(Transpose(mat)), mat);
+    EXPECT_EQ(Transpose(Transpose(mat)), mat);
 }
 
 TEST(Mat, submatrix)
@@ -227,7 +227,7 @@ TEST(Mat, submatrix)
     constexpr Matrix<double, 2, 2> ExpectedSubA = {
         -3., 2.,
         0., 6.};
-    ASSERT_EQ(subA, ExpectedSubA);
+    EXPECT_EQ(subA, ExpectedSubA);
 
     constexpr Matrix<double, 4, 4> B = {
         -6., 1., 1., 6.,
@@ -239,7 +239,7 @@ TEST(Mat, submatrix)
         -8., 8., 6.,
         -7., -1., 1.};
     constexpr Matrix<double, 3, 3> subB = SubMatrix(B, 2, 1);
-    ASSERT_EQ(subB, ExpectedSubB);
+    EXPECT_EQ(subB, ExpectedSubB);
 }
 
 TEST(Mat, minor)
@@ -251,7 +251,7 @@ TEST(Mat, minor)
         6., -1., 5.};
     constexpr double expected = 25.;
     constexpr auto minorA = Minor(A, 1, 0);
-    ASSERT_EQ(expected, minorA);
+    EXPECT_EQ(expected, minorA);
 }
 
 TEST(Mat, cofactor)
@@ -262,9 +262,9 @@ TEST(Mat, cofactor)
         6., -1., 5.};
     constexpr double expected = -25.;
     constexpr auto cofactorA = Cofactor(A, 1, 0);
-    ASSERT_EQ(expected, cofactorA);
+    EXPECT_EQ(expected, cofactorA);
     constexpr auto cf = Cofactor(A, 0, 0);
-    ASSERT_EQ(-12., cf);
+    EXPECT_EQ(-12., cf);
 }
 
 TEST(Mat, determinant)
@@ -277,8 +277,8 @@ TEST(Mat, determinant)
     [[maybe_unused]] constexpr auto res1 = Determinant(m);
     [[maybe_unused]] constexpr auto res2 = Cofactor(m, 0, 0);
 
-    ASSERT_EQ(res2, 56.);
-    ASSERT_EQ(res1, -196.);
+    EXPECT_EQ(res2, 56.);
+    EXPECT_EQ(res1, -196.);
 
     constexpr Matrix<double, 4, 4> m2 = {
         -2., -8., 3., 5.,
@@ -292,11 +292,11 @@ TEST(Mat, determinant)
     [[maybe_unused]] constexpr auto res6 = Cofactor(m2, 0, 2);
     [[maybe_unused]] constexpr auto res7 = Cofactor(m2, 0, 3);
 
-    ASSERT_EQ(res3, -4071.);
-    ASSERT_EQ(res4, 690.);
-    ASSERT_EQ(res5, 447.);
-    ASSERT_EQ(res6, 210.);
-    ASSERT_EQ(res7, 51.);
+    EXPECT_EQ(res3, -4071.);
+    EXPECT_EQ(res4, 690.);
+    EXPECT_EQ(res5, 447.);
+    EXPECT_EQ(res6, 210.);
+    EXPECT_EQ(res7, 51.);
 }
 
 TEST(Mat, invertible)
@@ -306,14 +306,14 @@ TEST(Mat, invertible)
         5., 5., 7., 6.,
         4., -9., 3., -7.,
         9., 1., 7., -6.};
-    ASSERT_EQ(Determinant(m), -2120.);
-    ASSERT_TRUE(Invertible(m));
+    EXPECT_EQ(Determinant(m), -2120.);
+    EXPECT_TRUE(Invertible(m));
     constexpr Matrix<double, 4, 4> m2 = {
         -4., 2., -2., -3.,
         9., 6., 2., 6.,
         0, -5., 1., -5.,
         0, 0, 0, 0};
-    ASSERT_FALSE(Invertible(m2));
+    EXPECT_FALSE(Invertible(m2));
 }
 
 TEST(Mat, inverse)
@@ -329,7 +329,7 @@ TEST(Mat, inverse)
         -0.07692, 0.12308, 0.02564, 0.03077,
         0.35897, 0.35897, 0.43590, 0.92308,
         -0.69231, -0.69231, -0.76923, -1.92308};
-    ASSERT_EQ(mInv, mInvExpected);
+    EXPECT_EQ(mInv, mInvExpected);
 
     constexpr Matrix<double, 4, 4> M2 = {
         9., 3., 0, 9.,
@@ -342,9 +342,9 @@ TEST(Mat, inverse)
         -0.02901, -0.14630, -0.10926, 0.12963,
         0.17778, 0.06667, -0.26667, 0.33333};
     constexpr Matrix<double, 4, 4> invM2 = Inverse(M2);
-    ASSERT_EQ(invM2, m2InvExpected);
+    EXPECT_EQ(invM2, m2InvExpected);
 
     constexpr Matrix<double, 4, 4> I4 = PredefinedMatrices::I<double, 4>;
     constexpr Matrix<double, 4, 4> I4_ = M2 * invM2;
-    ASSERT_EQ(I4, I4_);
+    EXPECT_EQ(I4, I4_);
 }

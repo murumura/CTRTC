@@ -8,6 +8,10 @@ set(project_test
     ${CMAKE_SOURCE_DIR}/test/test_math.cc
     ${CMAKE_SOURCE_DIR}/test/test_ray.cc
     ${CMAKE_SOURCE_DIR}/test/test_canvas.cc
+    ${CMAKE_SOURCE_DIR}/test/test_static_vector.cc
+    ${CMAKE_SOURCE_DIR}/test/test_intersection.cc
+    ${CMAKE_SOURCE_DIR}/test/test_shape.cc
+    ${CMAKE_SOURCE_DIR}/test/test_shading.cc
 )
 
 add_executable(raytracer_test 
@@ -24,6 +28,5 @@ target_include_directories(raytracer_test
 target_link_libraries(raytracer_test
     gtest
     gtest_main
-    gmock
     pthread
 )

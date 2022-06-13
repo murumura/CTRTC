@@ -61,9 +61,9 @@ namespace RayTracer {
 
         /**
          * NOTE: Apply chaining in reverse order
-        */
-        template <typename... Args, typename = std::enable_if_t<(std::is_same_v<Transform, std::decay_t<Args>> && ...)>>
-        constexpr Transform Chain(Args&&... args)
+         */
+        template <typename... Args>
+        requires(std::is_same_v<Transform, std::decay_t<Args>>&&...) constexpr Transform Chain(Args&&... args)
         {
             return (... * args) * (*this);
         }

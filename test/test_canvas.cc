@@ -1,5 +1,5 @@
 #include <canvas.hh>
-#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 using namespace RayTracer;
 using testing::Eq;
 
@@ -9,18 +9,18 @@ constexpr std::size_t height = 10;
 TEST(Canvas, black_background)
 {
     Canvas<width, height> canvas;
-    ASSERT_EQ(canvas.GetWidth(), width);
-    ASSERT_EQ(canvas.GetHeight(), height);
+    EXPECT_EQ(canvas.GetWidth(), width);
+    EXPECT_EQ(canvas.GetHeight(), height);
     for (auto i = 0; i < width; i++)
         for (auto j = 0; j < height; j++)
-            ASSERT_EQ(canvas(i, j), PredefinedColours::BLACK);
+            EXPECT_EQ(canvas(i, j), PredefinedColours::BLACK);
 }
 
 TEST(Canvas, write_to_canvas)
 {
     Canvas<width, height> canvas;
-    ASSERT_EQ(canvas.GetWidth(), width);
-    ASSERT_EQ(canvas.GetHeight(), height);
+    EXPECT_EQ(canvas.GetWidth(), width);
+    EXPECT_EQ(canvas.GetHeight(), height);
 
     for (auto i = 0; i < width; i++)
         for (auto j = 0; j < height; j++)
@@ -28,7 +28,7 @@ TEST(Canvas, write_to_canvas)
 
     for (auto i = 0; i < width; i++)
         for (auto j = 0; j < height; j++)
-            ASSERT_EQ(canvas(i, j), PredefinedColours::WHITE);
+            EXPECT_EQ(canvas(i, j), PredefinedColours::WHITE);
 }
 
 TEST(Canvas, to_ppm)
@@ -40,5 +40,5 @@ TEST(Canvas, to_ppm)
             canvas(i, j) = PredefinedColours::WHITE;
 
     canvas.ToPPM("test.ppm");
-    ASSERT_EQ(0, remove("test.ppm"));
+    EXPECT_EQ(0, remove("test.ppm"));
 }

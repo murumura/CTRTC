@@ -1,5 +1,6 @@
 #ifndef PRITRAITS_HH
 #define PRITRAITS_HH
+#include <type_traits>
 namespace RayTracer {
     namespace PrimitiveTraits {
         template <typename T, T... v>
@@ -19,6 +20,11 @@ namespace RayTracer {
 
         template <typename T, T... v>
         constexpr auto AllSameValue_v = AllSameValue<T, v...>::value;
+
+        template <typename T, typename... Args>
+        struct Contains
+            : public std::bool_constant<(std::is_same<T, Args>{} || ...)> {
+        };
 
     } // namespace PrimitiveTraits
 } // namespace RayTracer
