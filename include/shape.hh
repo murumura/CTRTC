@@ -24,11 +24,6 @@ namespace RayTracer {
 
         constexpr Intersection() noexcept = default;
 
-        constexpr Intersection(float t_, const ShapeType shapeType_)
-            : t{t_}, shapeType{shapeType_}
-        {
-        }
-
         constexpr Intersection(float t_, const ShapeWrapper* shapePtr_)
             : t{t_}, shapePtr{shapePtr_}
         {

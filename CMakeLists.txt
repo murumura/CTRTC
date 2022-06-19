@@ -4,8 +4,21 @@ set(CMAKE_CXX_STANDARD 20) # /std:c++latest for msvc and -std=c++20 for everyone
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+list(APPEND COMPILE_DEFINITIONS "-std=c++2a")
+list(APPEND COMPILE_DEFINITIONS "-fconstexpr-ops-limit=9147483647")
+list(APPEND COMPILE_DEFINITIONS "-fconstexpr-depth=999999")
+
+######### Options ###########################
+option(BUILD_TESTS "Build unit tests" OFF)
+option(RENDER_STATIC "Perform render at compile-time" OFF)
+set(RENDER_CHAPTER "" CACHE STRING "Chapter to render")
+#############################################
+if (RENDER_STATIC)
+    list(APPEND COMPILE_DEFINITIONS "-DCOMPILETIME")
+endif()
 # Define project name
 project(RayTracerTop)
+
 include_directories(
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/src/shapes"
@@ -29,10 +42,12 @@ set(project_headers
     ${CMAKE_SOURCE_DIR}/include/shape.hh
     ${CMAKE_SOURCE_DIR}/include/shading.hh
 )
+if (BUILD_TESTS)
+    add_subdirectory(test)
+endif()
 
-set(project_sources
-)
-
-find_package(PkgConfig REQUIRED)
-add_subdirectory(test)
-add_subdirectory(scene)
+if (NOT (RENDER_CHAPTER STREQUAL ""))
+    message(STATUS "Render chapter ${RENDER_CHAPTER}")
+    message(STATUS "Render at compile time: ${RENDER_STATIC}")
+    add_subdirectory(scene)
+endif()

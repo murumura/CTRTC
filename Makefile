@@ -3,6 +3,29 @@ INC_FILE := $(wildcard ./include/primitives/*.hh  ./include/utils/*.hh ./include
 SCENE_FILE := $(wildcard ./scene/*.cc)
 DOCKER_DIR:= ./docker
 
+STATIC_RENDER_DEF := OFF
+ifeq ($(STATIC),1)
+	STATIC_RENDER_DEF = ON
+endif
+
+ifneq ($(CH),)
+	_CH=$(CH)
+endif
+
+CHVAR := 
+ifeq ($(_CH), 4)
+	CHVAR := CHAPTER4
+else ifeq ($(_CH), 5)
+	CHVAR := CHAPTER5
+else ifeq ($(_CH), 6)
+	CHVAR := CHAPTER6
+endif
+
+TEST_DEF := OFF
+ifeq (1, $(filter 1, $(TEST) $(test)))
+	TEST_DEF = ON
+endif
+
 export BUILDTYPE ?= Debug
 buildtype := $(shell echo "$(BUILDTYPE)" | tr "[A-Z]" "[a-z]")
 export BUILDDIR ?= build/default/$(buildtype)
@@ -15,9 +38,9 @@ else
   $(error Cannot determine host platform)
 endif
 
-.PHONY: all
-all: $(BUILDDIR)/Makefile
-	cmake --build "$(BUILDDIR)" -j $(JOBS)
+.PHONY: chapter
+chapter: $(BUILDDIR)/Makefile
+	cmake --build "$(BUILDDIR)" -j 1 -- $(CHVAR)
 
 .PHONY: test
 test: $(BUILDDIR)/Makefile
@@ -39,7 +62,11 @@ clean:
 .PRECIOUS: $(BUILDDIR)/Makefile
 $(BUILDDIR)/Makefile:
 	mkdir -p $(BUILDDIR)
-	cmake -H. -B$(BUILDDIR) -DCMAKE_BUILD_TYPE=$(BUILDTYPE)
+	cmake -H. -B$(BUILDDIR) \
+	-DCMAKE_BUILD_TYPE=$(BUILDTYPE) \
+	-DBUILD_TESTS=$(TEST_DEF) \
+	-DRENDER_CHAPTER=$(_CH) \
+	-DRENDER_STATIC=$(STATIC_RENDER_DEF)
 
 .PHONY: docker-run
 docker-run:

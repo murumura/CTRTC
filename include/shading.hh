@@ -23,9 +23,13 @@ namespace RayTracer {
         constexpr friend bool operator==(const Material& lhs,
             const Material& rhs) noexcept
         {
-            //clang-format off
-            return lhs.color == rhs.color && lhs.ambient == rhs.ambient && lhs.diffuse == rhs.diffuse && lhs.specular == rhs.specular && lhs.shininess == rhs.shininess;
-            //clang-format on
+            // clang-format off
+            return lhs.color == rhs.color && 
+                lhs.ambient == rhs.ambient && 
+                lhs.diffuse == rhs.diffuse && 
+                lhs.specular == rhs.specular && 
+                lhs.shininess == rhs.shininess;
+            // clang-format on
         }
     };
 
@@ -50,30 +54,22 @@ namespace RayTracer {
         // A negative number means the light is on the other side of the surface
         const double lightDotNormal = lightDirection.DotProduct(normal);
 
-        const auto [diffuse, specular] = [&]() -> std::pair<Colour, Colour> {
-            if (lightDotNormal < 0)
-                return {PredefinedColours::BLACK, PredefinedColours::BLACK};
-            else {
-                // compute the diffuse contribution
-                const Colour diffuse = effectiveColour * material.diffuse * lightDotNormal;
+        // precompute for ambient contribution
+        const auto reflectv = -lightDirection.Reflect(normal);
+        const double reflectDotEye = reflectv.DotProduct(eye);
 
-                const auto reflectv = -lightDirection.Reflect(normal);
-                const double reflectDotEye = reflectv.DotProduct(eye);
-
-                const Colour specular = [&]() -> Colour {
-                    if (reflectDotEye <= 0)
-                        return PredefinedColours::BLACK;
-                    else {
-                        const auto factor = std::pow(reflectDotEye, material.shininess);
-
-                        return light.intensity * material.specular * factor;
-                    }
-                }();
-
-                return {diffuse, specular};
-            }
-        }();
-
+        // compute the diffuse contribution
+        const auto diffuse = (lightDotNormal < 0) ? PredefinedColours::BLACK
+                                                  : effectiveColour * material.diffuse * lightDotNormal;
+        // clang-format off
+        #ifdef COMPILETIME 
+        const auto specular = (lightDotNormal < 0 || reflectDotEye <= 0) ? PredefinedColours::BLACK
+                                                : light.intensity * material.specular * MathUtils::ConstExprExp(reflectDotEye, material.shininess);
+        # else
+        const auto specular = (lightDotNormal < 0 || reflectDotEye <= 0) ? PredefinedColours::BLACK
+                                                : light.intensity * material.specular * std::pow(reflectDotEye, material.shininess);
+        #endif
+        // clang-format on
         return ambient + diffuse + specular;
     }
 

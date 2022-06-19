@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 set(project_test
     ${CMAKE_SOURCE_DIR}/test/main.cc
@@ -17,9 +17,8 @@ set(project_test
 add_executable(raytracer_test 
 	${project_test} 
     ${project_headers}
-    ${project_sources}
 )
-
+target_compile_options(raytracer_test  PUBLIC  ${COMPILE_DEFINITIONS})
 target_include_directories(raytracer_test
     PRIVATE 
         ${CMAKE_SOURCE_DIR}/include

@@ -18,28 +18,33 @@ namespace RayTracer {
 
             template <typename T = double>
             constexpr T NINF = -std::numeric_limits<T>::infinity();
-
         }; // namespace MathConstants
 
         /* Constexpr square root value for floating point value. */
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, T>
-        ConstExprSqrtf(T val)
+        requires(std::is_floating_point_v<T>) constexpr T ConstExprSqrtf(T x)
         {
-            return std::sqrt(val);
+            if (x >= 0 && x < std::numeric_limits<T>::infinity()) {
+                T curr{x}, prev{0.0f};
+                while (curr != prev) {
+                    prev = curr;
+                    curr = 0.5f * (curr + x / curr);
+                }
+
+                return curr;
+            }
+            return std::numeric_limits<T>::quiet_NaN();
         }
 
         /* constexpr absolute value of a floating point value. */
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, T>
-        ConstExprAbsf(T val)
+        requires(std::is_floating_point_v<T>) constexpr T ConstExprAbsf(T val)
         {
             return val < static_cast<T>(0) ? -val : val;
         }
 
         template <typename S, typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<S> || std::is_floating_point_v<T>, bool>
-        ApproxEqual(S x, T y)
+        requires(std::is_floating_point_v<S> || std::is_floating_point_v<T>) constexpr bool ApproxEqual(S x, T y)
         {
             // We need special treatment for infinities here.
             if (x == std::numeric_limits<S>::infinity() && y == std::numeric_limits<S>::infinity())
@@ -52,8 +57,7 @@ namespace RayTracer {
         // test whether values are within machine epsilon, used for algorithm
         // termination
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, T>
-        Feq(T x, T y)
+        requires(std::is_floating_point_v<T>) constexpr T Feq(T x, T y)
         {
             return ConstExprAbsf(x - y) <= std::numeric_limits<T>::epsilon();
         }
@@ -75,13 +79,12 @@ namespace RayTracer {
 
         /* Constexpr calculation of digit number from packs of numbers */
         template <typename... Ts>
-        constexpr std::enable_if_t<std::conjunction_v<std::is_arithmetic<std::decay_t<Ts>>...>, int>
-        NumOfDigits(Ts... args)
+        requires(std::conjunction_v<std::is_arithmetic<std::decay_t<Ts>>...>) constexpr int NumOfDigits(Ts... args)
         {
             return (NumOfDigitsHelper(args) + ...);
         }
 
-        /** @brief compute taylor series for sin/cos in recursive fasion
+        /** @brief compute taylor series for sine/cosine in recursive fasion
          * @param x: initial value
          * @param sum: summation term from previous funtion call
          * @param fact: factorial term, e.g 3!, 5!, ...
@@ -91,8 +94,7 @@ namespace RayTracer {
          * @return Traiangle expannsion value
          */
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, T>
-        TaylorSeries(T x, T sum, T fact, int i, int sign, T xProduct)
+        requires(std::is_floating_point_v<T>) constexpr T TaylorSeries(T x, T sum, T fact, int i, int sign, T xProduct)
         {
             // clang-format off
             return Feq(sum, sum + xProduct * sign / fact) ? sum : \
@@ -102,8 +104,7 @@ namespace RayTracer {
 
         /* Constexpr calculation sin by Taylor series expansion */
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, T>
-        Sine(T rad)
+        requires(std::is_floating_point_v<T>) constexpr T Sine(T rad)
         {
             // sinx = x - \frac{x^3}{3!} + \frac{x^5}{5!} - ...
             int sign = -1;
@@ -115,8 +116,7 @@ namespace RayTracer {
 
         /* Constexpr calculation cos by Taylor series expansion */
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, T>
-        Cosine(T rad)
+        requires(std::is_floating_point_v<T>) constexpr T Cosine(T rad)
         {
             // cosx = 1.0 - \frac{x^2}{2!} + \frac{x^4}{4!} - ...
             int sign = -1;
@@ -128,15 +128,24 @@ namespace RayTracer {
 
         /* Constexpr calculation cos by Taylor series expansion */
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, T>
-        Tangent(T rad)
+        requires(std::is_floating_point_v<T>) constexpr T Tangent(T rad)
         {
             return Sine(rad) / Cosine(rad);
         }
 
+        //! computes base^exponent, base to the power of exponent (with an integer exponent)
         template <typename T>
-        constexpr typename std::enable_if_t<std::is_floating_point_v<T>, std::optional<std::pair<T, T>>>
-        SolveQuadratic(T a, T b, T c)
+        requires(std::is_floating_point_v<T>) constexpr T ConstExprExp(const T base, const int32_t exponent)
+        {
+            T ret = (T)1;
+            for (int32_t i = 0; i < exponent; ++i) {
+                ret *= base;
+            }
+            return ret;
+        }
+
+        template <typename T>
+        requires(std::is_floating_point_v<T>) constexpr std::optional<std::pair<T, T>> SolveQuadratic(T a, T b, T c)
         {
             T discriminant = (b * b) - (4.0 * a * c);
             if (ConstExprAbsf(discriminant) < 1e-4) {

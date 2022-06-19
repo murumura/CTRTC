@@ -1,15 +1,23 @@
+if ((${RENDER_CHAPTER} STREQUAL 4))
+    add_executable(CHAPTER4
+        ${project_headers}
+        clock.cc
+    )
+    target_compile_options(CHAPTER4  PUBLIC  ${COMPILE_DEFINITIONS})
+endif()
 
-add_executable(Clock
-    ${project_headers}
-    clock.cc
-)
+if ((${RENDER_CHAPTER} STREQUAL 5))
+    add_executable(CHAPTER5
+        ${project_headers}
+        sphere_on_wall.cc
+    )
+    target_compile_options(CHAPTER5  PUBLIC  ${COMPILE_DEFINITIONS})
+endif()
 
-add_executable(SphereWalls
-    ${project_headers}
-    sphere_on_wall.cc
-)
-
-add_executable(SilhouetteSphere
-    ${project_headers}
-    silhouette_sphere.cc
-)
+if ((${RENDER_CHAPTER} STREQUAL 6))
+    add_executable(CHAPTER6
+        ${project_headers}
+        silhouette_sphere.cc
+    )
+    target_compile_options(CHAPTER6  PUBLIC  ${COMPILE_DEFINITIONS})
+endif()
