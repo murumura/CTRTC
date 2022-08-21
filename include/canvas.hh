@@ -7,79 +7,70 @@
 #include <primitives/vec.hh>
 namespace RayTracer {
 
-    template <std::size_t W, std::size_t H>
-    class Canvas final {
-    public:
-        constexpr static std::size_t width = W;
-        constexpr static std::size_t height = H;
+template <std::size_t W, std::size_t H>
+class Canvas final {
+ public:
+  constexpr static std::size_t width = W;
+  constexpr static std::size_t height = H;
 
-        // canvas with black-color
-        constexpr Canvas() noexcept : buffer{}
-        {
+  // canvas with black-color
+  constexpr Canvas() noexcept : buffer{} {}
+
+  constexpr std::size_t GetHeight() const noexcept { return height; }
+
+  constexpr std::size_t GetWidth() const noexcept { return width; }
+
+  constexpr auto& operator()(std::size_t row, std::size_t col) {
+    return buffer[(row * width + col)];
+  }
+
+  constexpr auto operator()(std::size_t row, std::size_t col) const {
+    return buffer[(row * width + col)];
+  }
+
+  void ToPPM(const std::string& fileName) const {
+    namespace fs = std::filesystem;
+    std::ofstream ppm(fileName);
+    if (!fs::path(fileName).has_extension() or
+        fs::path(fileName).extension() != ".ppm")
+      throw std::invalid_argument("Require 'ppm' as the file extention");
+
+    ppm << "P3\n"
+        << GetWidth() << " " << GetHeight() << "\n"
+        << ColourConstants::MaxValue << "\n";
+
+    int currentLineWidth = 0;
+
+    for (auto i = 0; i < height; i++) {
+      for (auto j = 0; j < width; j++) {
+        int r = static_cast<int>(std::clamp(
+            ((*this)(i, j)[ColourConstants::r]) * ColourConstants::MaxValue,
+            0.0, (double)ColourConstants::MaxValue));
+        int g = static_cast<int>(std::clamp(
+            ((*this)(i, j)[ColourConstants::g]) * ColourConstants::MaxValue,
+            0.0, (double)ColourConstants::MaxValue));
+        int b = static_cast<int>(std::clamp(
+            ((*this)(i, j)[ColourConstants::b]) * ColourConstants::MaxValue,
+            0.0, (double)ColourConstants::MaxValue));
+
+        auto valueWidth = MathUtils::NumOfDigits(r, g, b);
+
+        if (currentLineWidth + 1 + valueWidth > 70) {
+          ppm << "\n";
+          currentLineWidth = 0;
         }
+        ppm << r << " " << g << " " << b << "\n";
+        currentLineWidth += valueWidth;
+      }
+    }
 
-        constexpr std::size_t GetHeight() const noexcept
-        {
-            return height;
-        }
+    ppm.close();
+  }
 
-        constexpr std::size_t GetWidth() const noexcept
-        {
-            return width;
-        }
+ private:
+  std::array<Colour, width * height> buffer;
+};
 
-        constexpr auto& operator()(std::size_t row, std::size_t col)
-        {
-            return buffer[(row * width + col)];
-        }
-
-        constexpr auto operator()(std::size_t row, std::size_t col) const
-        {
-            return buffer[(row * width + col)];
-        }
-
-        constexpr void ToPPM(const std::string& fileName) const
-        {
-            namespace fs = std::filesystem;
-            std::ofstream ppm(fileName);
-            if (!fs::path(fileName).has_extension() or fs::path(fileName).extension() != ".ppm")
-                throw std::invalid_argument("Require 'ppm' as the file extention");
-            ppm << "P3\n"
-                << GetWidth() << " " << GetHeight() << "\n"
-                << ColourConstants::MaxValue << "\n";
-
-            int currentLineWidth = 0;
-
-            for (auto i = 0; i < height; i++) {
-                for (auto j = 0; j < width; j++) {
-                    int r = static_cast<int>(
-                        std::clamp(
-                            ((*this)(i, j)[ColourConstants::r]) * ColourConstants::MaxValue, 0.0, (double)ColourConstants::MaxValue));
-                    int g = static_cast<int>(
-                        std::clamp(
-                            ((*this)(i, j)[ColourConstants::g]) * ColourConstants::MaxValue, 0.0, (double)ColourConstants::MaxValue));
-                    int b = static_cast<int>(
-                        std::clamp(
-                            ((*this)(i, j)[ColourConstants::b]) * ColourConstants::MaxValue, 0.0, (double)ColourConstants::MaxValue));
-
-                    auto valueWidth = MathUtils::NumOfDigits(r, g, b);
-
-                    if (currentLineWidth + 1 + valueWidth > 70) {
-                        ppm << "\n";
-                        currentLineWidth = 0;
-                    }
-                    ppm << r << " " << g << " " << b << "\n";
-                    currentLineWidth += valueWidth;
-                }
-            }
-
-            ppm.close();
-        }
-
-    private:
-        std::array<Colour, width * height> buffer;
-    };
-
-} // namespace RayTracer
+}  // namespace RayTracer
 
 #endif

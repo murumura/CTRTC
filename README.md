@@ -15,7 +15,7 @@ I tring to make whole project to be able to run at compile time.
 Compiler | Version
 ---------|--------
 GCC      | 12.1.0
-clang    | 13.0.0
+clang    | 14.0.0
 
 ## Build and run test suite
 Use the following commands from the project's top-most directory to run the test suite.
@@ -48,7 +48,7 @@ make CH=5 STATIC=1
 ```bash
 cd RayTracerChallenge
 make CH=6 # render at run time
-# or render at compile time, this would take up ~15 min to finish
+# or render at compile time, this would take up ~30 min to finish(for )
 make CH=6 STATIC=1 
 ./build/default/debug/scene/CHAPTER6
 ```

@@ -4,9 +4,6 @@ set(CMAKE_CXX_STANDARD 20) # /std:c++latest for msvc and -std=c++20 for everyone
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-list(APPEND COMPILE_DEFINITIONS "-std=c++2a")
-list(APPEND COMPILE_DEFINITIONS "-fconstexpr-ops-limit=9147483647")
-list(APPEND COMPILE_DEFINITIONS "-fconstexpr-depth=999999")
 
 ######### Options ###########################
 option(BUILD_TESTS "Build unit tests" OFF)
@@ -18,7 +15,17 @@ if (RENDER_STATIC)
 endif()
 # Define project name
 project(RayTracerTop)
+list(APPEND COMPILE_DEFINITIONS "-std=c++2a")
 
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    list(APPEND COMPILE_DEFINITIONS "-fconstexpr-steps=4247483647")
+    list(APPEND COMPILE_DEFINITIONS "-O3")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    list(APPEND COMPILE_DEFINITIONS "-fconstexpr-ops-limit=9147483647")
+endif()
+
+list(APPEND COMPILE_DEFINITIONS "-fconstexpr-depth=999999")
 include_directories(
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/src/shapes"
@@ -34,9 +41,12 @@ set(project_headers
     ${CMAKE_SOURCE_DIR}/include/primitives/vec.hh
     ${CMAKE_SOURCE_DIR}/include/primitives/matrix.hh
     ${CMAKE_SOURCE_DIR}/include/primitives/static_base.hh
+    ${CMAKE_SOURCE_DIR}/include/primitives/dynamic_vector.hh
+    ${CMAKE_SOURCE_DIR}/include/primitives/static_vector.hh
     ${CMAKE_SOURCE_DIR}/include/utils/math.hh
     ${CMAKE_SOURCE_DIR}/include/transform.hh
     ${CMAKE_SOURCE_DIR}/include/canvas.hh
+    ${CMAKE_SOURCE_DIR}/include/world.hh
     ${CMAKE_SOURCE_DIR}/include/ray.hh
     ${CMAKE_SOURCE_DIR}/include/camera.hh
     ${CMAKE_SOURCE_DIR}/include/shape.hh

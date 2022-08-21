@@ -40,7 +40,7 @@ endif
 
 .PHONY: chapter
 chapter: $(BUILDDIR)/Makefile
-	cmake --build "$(BUILDDIR)" -j 1 -- $(CHVAR)
+	cmake --build "$(BUILDDIR)" -j $(JOBS) -- $(CHVAR)
 
 .PHONY: test
 test: $(BUILDDIR)/Makefile
