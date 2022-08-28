@@ -21,3 +21,12 @@ if ((${RENDER_CHAPTER} STREQUAL 6))
     )
     target_compile_options(CHAPTER6  PUBLIC  ${COMPILE_DEFINITIONS})
 endif()
+
+
+if ((${RENDER_CHAPTER} STREQUAL 7))
+    add_executable(CHAPTER7
+        ${project_headers}
+        scene.cc
+    )
+    target_compile_options(CHAPTER7  PUBLIC  ${COMPILE_DEFINITIONS})
+endif()

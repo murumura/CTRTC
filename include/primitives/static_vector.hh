@@ -61,32 +61,24 @@ class StaticVector : protected std::array<T, Size> {
 
   [[nodiscard]] constexpr const value_type& operator[](
       const size_type pos) const noexcept {
-    assert(pos <= m_size);
     return data()[pos];
   }
 
   [[nodiscard]] constexpr value_type& operator[](const size_type pos) noexcept {
-    assert(pos <= m_size);
     return data()[pos];
   }
 
   constexpr void push_back(value_type value) noexcept {
-    assert(m_size < max_size);
     data()[m_size++] = std::move(value);
   }
 
-  constexpr void pop_back() noexcept {
-    assert(!empty());
-    --m_size;
-  }
+  constexpr void pop_back() noexcept { --m_size; }
 
   [[nodiscard]] constexpr const value_type& back() const noexcept {
-    assert(!empty());
     return data()[m_size - 1];
   }
 
   [[nodiscard]] constexpr value_type& back() noexcept {
-    assert(!empty());
     return data()[m_size - 1];
   }
 

@@ -2,6 +2,7 @@
 #define SHAPE_HH
 #include <concepts>
 #include <optional>
+#include <primitives/matrix.hh>
 #include <primitives/static_base.hh>
 #include <primitives/static_vector.hh>
 #include <ray.hh>
@@ -14,10 +15,19 @@ enum ShapeType { SphereTag, None };
 
 class ShapeWrapper;
 
+struct HitRecord {
+  float t;
+  const ShapeWrapper* shapePtr{nullptr};
+  Tuple eyeV;
+  Tuple point;
+  Tuple normalV;
+  bool inside;
+};
+
 class Intersection {
  public:
   float t{0.f};
-  ShapeType shapeType{SphereTag};
+  ShapeType shapeType{None};
   const ShapeWrapper* shapePtr{nullptr};
 
   constexpr Intersection() noexcept = default;
@@ -25,7 +35,29 @@ class Intersection {
   constexpr Intersection(float t_, const ShapeWrapper* shapePtr_)
       : t{t_}, shapePtr{shapePtr_} {}
 
+  constexpr Intersection(const Intersection& other)
+      : t(other.t), shapeType(other.shapeType), shapePtr(other.shapePtr) {}
+
+  constexpr Intersection(Intersection&& other)
+      : t(std::exchange(other.t, 0)),
+        shapeType(std::exchange(other.shapeType, ShapeType::None)),
+        shapePtr(std::exchange(other.shapePtr, nullptr)) {}
+
+  constexpr Intersection& operator=(const Intersection& other) noexcept {
+    shapePtr = other.shapePtr;
+    shapeType = other.shapeType;
+    t = other.t;
+    return *this;
+  }
+
+  constexpr Intersection& operator=(Intersection&& other) noexcept {
+    shapePtr = std::exchange(other.shapePtr, nullptr);
+    shapeType = std::exchange(other.shapeType, ShapeType::None);
+    t = std::exchange(other.t, 0);
+    return *this;
+  }
   constexpr float GetIntersectDistance() const { return t; }
+  constexpr HitRecord PrepareComputation(const Ray& ray) const;
 
   constexpr ShapeType GetShapeType() const;
 };
@@ -70,9 +102,10 @@ template <typename IntersectionList>
 requires(
     std::is_same_v<
         typename IntersectionList::value_type,
-        Intersection>) constexpr void SortIntersections(IntersectionList&
+        Intersection>) constexpr auto SortIntersections(IntersectionList&
                                                             intersections) noexcept {
-  std::sort(intersections.begin(), intersections.end(),
+  auto result = std::array{intersections};
+  std::sort(result.begin(), result.end(),
             [](const Intersection& lhs, const Intersection& rhs) -> bool {
               // ignore all intersection with negative t (hit will never be behind the ray's origin)
               if (lhs.GetIntersectDistance() < 0)
@@ -81,6 +114,7 @@ requires(
                 return true;
               return lhs.GetIntersectDistance() < rhs.GetIntersectDistance();
             });
+  return result;
 }
 
 template <typename IntersectionList>
@@ -132,6 +166,10 @@ class Shape : public StaticBase<T, Shape> {
   constexpr ShapeType GetShapeType() const {
     return this->derived().GetShapeType();
   }
+  constexpr void SetMaterial(const Material& material_) {
+    material = material_;
+  }
+  constexpr Material GetMaterial() const { return material; }
 
   constexpr Tuple LocalNormalAt(const Tuple& point) const {
     return ToNormalizedVector(point - PredefinedTuples::ZeroPoint);
@@ -161,7 +199,6 @@ struct SphereTrait {
   static constexpr std::size_t NumIntersections = 2;
   static constexpr std::size_t ReturnIndex = 0;
 };
-
 }  // namespace ShapeTraits
 class Sphere : public Shape<Sphere> {
  public:
@@ -181,8 +218,9 @@ class Sphere : public Shape<Sphere> {
       const auto& [r1, r2] = res.value();
       return StaticVector<Intersection, 2>{Intersection(r1, ptrSelf),
                                            Intersection(r2, ptrSelf)};
-    } else
-      return StaticVector<Intersection, 2>();
+    } else //Currently a workaround for non-hitting, TODO: account for a more elegent solution in the future
+      return StaticVector<Intersection, 2>{Intersection(-1, nullptr),
+                                           Intersection(-1, nullptr)};
   }
 
   constexpr auto IntersectWith(const Ray& ray,
@@ -215,6 +253,12 @@ class ShapeWrapper {
         shapeObject);
   }
 
+  constexpr Material GetMaterial() const {
+    return std::visit(
+        [&](auto const& elem) -> decltype(auto) { return elem.GetMaterial(); },
+        shapeObject);
+  }
+
   constexpr Tuple GetWorldNormalAt(const Tuple& worldPoint) const {
     return std::visit(
         [&](auto const& elem) -> decltype(auto) {
@@ -235,6 +279,19 @@ class ShapeWrapper {
 
 constexpr ShapeType Intersection::GetShapeType() const {
   return shapePtr->GetShapeType();
+}
+
+constexpr HitRecord Intersection::PrepareComputation(const Ray& ray) const {
+  HitRecord returnRec{};
+  returnRec.t = t;
+  returnRec.shapePtr = shapePtr;
+  returnRec.point = ray.PositionAlong(GetIntersectDistance());
+  returnRec.eyeV = -ray.GetDirection();
+  const auto normalV = shapePtr->GetWorldNormalAt(returnRec.point);
+  returnRec.inside = returnRec.normalV.DotProduct(returnRec.eyeV) < 0;
+  // The normal is inverted when the hit occurs inside the object
+  returnRec.normalV = returnRec.inside ? -normalV : normalV;
+  return returnRec;
 }
 
 }  // namespace RayTracer

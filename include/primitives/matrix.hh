@@ -1,11 +1,11 @@
 #ifndef MAT_HH
 #define MAT_HH
 #include <array>
+#include <cassert>
 #include <primitive_traits.hh>
 #include <primitives/vec.hh>
 #include <type_traits>
 #include <utils/math.hh>
-
 namespace RayTracer {
 
 template <typename T, std::size_t R, std::size_t C>

@@ -5,12 +5,13 @@
 #include <shading.hh>
 #include <shape.hh>
 #include <tuple>
+#include <vector>
 namespace RayTracer {
 
 template <typename T>
 using uncvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-// helper constant for the visitor #3
+// helper constant for the visitor
 template <class>
 inline constexpr bool always_false_v = false;
 
@@ -25,8 +26,8 @@ class World {
   template <std::size_t N>
   constexpr auto IntersectWithRay(const Ray& ray) const
       -> std::array<Intersection, N> {
-    DynamicVector<Intersection> dynamicVector;
-
+    std::array<Intersection, N> ret = {};
+    std::size_t iter = 0;
     for (int i = 0; i < shapes.size(); i++) {
       const auto variant = shapes[i].IntersectWith(ray);
       auto visitor = [&](auto&& v) {
@@ -34,23 +35,45 @@ class World {
         if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
           const auto xs = std::get<StaticVector<Intersection, 2>>(variant);
           for (std::size_t i = 0; i < 2; i++)
-            dynamicVector.push_back(xs[i]);
+            ret[iter++] = std::move(xs[i]);
         } else if constexpr (std::is_same_v<T, StaticVector<Intersection, 1>>) {
           const auto xs = std::get<StaticVector<Intersection, 1>>(variant);
-          dynamicVector.push_back(xs[0]);
-        } else {
-          static_assert(always_false_v<T>, "non-exhaustive visitor!");
+          ret[iter++] = std::move(xs[0]);
         }
       };
       // visit the variant
       std::visit(visitor, variant);
     }
-    std::array<Intersection, N> ret;
-    std::ranges::copy(ret, dynamicVector.begin());
-    return ret;
+    // Sort intersections before return
+    return IntersectionUtils::SortIntersections(ret);
   }
 
-  constexpr std::size_t NumIntersections() const {
+  constexpr Colour ShadeHit(const HitRecord& hitRecord) const {
+    Colour color = PredefinedColours::BLACK;
+    // supporting multiple light sources
+    for (int i = 0; i < lights.size(); i++) {
+      color += lighting(hitRecord.shapePtr->GetMaterial(), lights[i],
+                        hitRecord.point, hitRecord.eyeV, hitRecord.normalV);
+    }
+    return color;
+  }
+
+  template <std::size_t N>
+  constexpr Colour ColorAt(const Ray& ray) const {
+    // find the intersections with given ray
+    const auto xs = IntersectWithRay<N>(ray);
+    // find the hit from the resultings intersections
+    const auto I = IntersectionUtils::VisibleHit(xs);
+    // return the color black if there is no such intersections
+    if (!I.has_value() || !I.value().shapePtr)
+      return PredefinedColours::BLACK;
+    // otherwise, precompute the necessary values
+    const auto hitRecord = I.value().PrepareComputation(ray);
+    // find the color at the hit
+    return ShadeHit(hitRecord);
+  }
+
+  constexpr std::size_t PossibleXSNums() const {
     std::size_t numXs = 0;
     for (int i = 0; i < shapes.size(); i++) {
       const auto variant = shapes[i];
@@ -81,7 +104,7 @@ class World {
 namespace WorldUtils {
 
 constexpr auto DefaultWorld() {
-  PointLight light = PointLight(MakePoint(0, 0, -5), MakeColour(1, 1, 1));
+  PointLight light = PointLight(MakePoint(-10, 10, -10), MakeColour(1, 1, 1));
   std::array<PointLight, 1> lights = {light};
   Material m = []() {
     Material ret;

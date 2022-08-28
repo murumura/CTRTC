@@ -24,7 +24,7 @@ TEST(Intersection, aggregations) {
   EXPECT_EQ(xs[1], I1);
 }
 
-TEST(Intersection, Intersection_object) {
+TEST(Intersection, intersection_object) {
   // Intersect sets the object on the intersection
   // intersect with sphere should give us 2 intersection point
   constexpr Sphere sphere;
@@ -80,7 +80,7 @@ TEST(Intersection, all_negative_distance) {
   EXPECT_EQ(I, std::nullopt);
 }
 
-TEST(Intersection, Intersect_with_scaled_sphere) {
+TEST(Intersection, intersect_with_scaled_sphere) {
   constexpr auto scale = MatrixUtils::Scale(2, 2, 2);
   constexpr Sphere sphere{scale};
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
@@ -93,7 +93,7 @@ TEST(Intersection, Intersect_with_scaled_sphere) {
   EXPECT_EQ(xs[1].GetIntersectDistance(), 7);
 }
 
-TEST(Intersection, Intersect_with_translated_sphere) {
+TEST(Intersection, intersect_with_translated_sphere) {
   constexpr auto translation = MatrixUtils::Translation(5, 0, 0);
   constexpr Sphere sphere{translation};
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
@@ -101,5 +101,8 @@ TEST(Intersection, Intersect_with_translated_sphere) {
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
   constexpr auto xs = sphere.IntersectWith(ray, &shapeWrapper);
-  EXPECT_EQ(xs.size(), 0);
+  EXPECT_EQ(xs.size(), 2);
+  //TODO: a workaround for non-hitting : see shape.h for more details
+  constexpr auto I = IntersectionUtils::VisibleHit(xs);
+  EXPECT_EQ(I, std::nullopt);
 }
