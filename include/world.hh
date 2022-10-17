@@ -1,11 +1,9 @@
 #ifndef WORLD_HH
 #define WORLD_HH
 #include <concepts>
-#include <primitives/dynamic_vector.hh>
 #include <shading.hh>
 #include <shape.hh>
 #include <tuple>
-#include <vector>
 namespace RayTracer {
 
 template <typename T>

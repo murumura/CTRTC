@@ -40,7 +40,7 @@ class Camera final {
 
     // image width >= image height (in pixels)
     // meaning that there is more pixels along the y axis then there is along the x axis
-    // thig give us a wider-shape pixel instead of a square pixels
+    // this give us a wider-shape pixel instead of a square pixels
     // to fix we could divide the longer side (x-axis in this case) by aspect ratio
     //
     //                      200-pixels
@@ -66,7 +66,7 @@ class Camera final {
   std::size_t VerticalSize() const { return vsize; }
   double FieldOfView() const { return fov; }
   double PixelSize() const { return pixelSize; }
-  Transform Transform() const { return transform; }
+  Transform TransformMatrix() const { return transform; }
 
   /** Emit a new ray that start at the camera and pass through the indicaed pixel location on the canvas.
    * @param x  x-location on canvas(in pixels)

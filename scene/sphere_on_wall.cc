@@ -2,6 +2,13 @@
 #include <shape.hh>
 #include <vec.hh>
 using namespace RayTracer;
+
+#ifdef COMPILETIME
+#define CTRTC_CONST constexpr
+#else
+#define CTRTC_CONST const
+#endif
+
 #ifdef COMPILETIME
 template <std::size_t canvasPixels>
 constexpr auto RenderStaticChapter5() {
@@ -44,14 +51,14 @@ int main() {
   auto canvas = RenderStaticChapter5<canvasPixels>();
 #else
   Canvas<canvasPixels, canvasPixels> canvas;
-  constexpr auto plotColor = MakeColour(1, 0, 0);  // red
-  constexpr auto rayOrigin = MakePoint(0, 0, -5);
-  constexpr double wallSize = 7.0;  // world-unit
-  constexpr double wallZ = 10.0;
-  constexpr double wallHalf = wallSize * 0.5;
-  constexpr double pixelSize = wallSize / static_cast<double>(canvasPixels);
-  constexpr Sphere sphere;
-  static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
+  CTRTC_CONST auto plotColor = MakeColour(1, 0, 0);  // red
+  CTRTC_CONST auto rayOrigin = MakePoint(0, 0, -5);
+  CTRTC_CONST double wallSize = 7.0;  // world-unit
+  CTRTC_CONST double wallZ = 10.0;
+  CTRTC_CONST double wallHalf = wallSize * 0.5;
+  CTRTC_CONST double pixelSize = wallSize / static_cast<double>(canvasPixels);
+  CTRTC_CONST Sphere sphere;
+  static CTRTC_CONST ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   for (int y = 0; y < canvasPixels; y++) {
     //  compute the world y-coordinate (and don't forget the y-coordinate is upside-down)
     double worldY = wallHalf - pixelSize * static_cast<double>(y);

@@ -296,8 +296,8 @@ constexpr Matrix<T, R, C>& operator/=(Matrix<T, R, C>& matA,
 }
 
 /************************
-     * Matrix Utils         *
-     *************************/
+*    Matrix Utils       *
+*************************/
 
 /* forward decalation to avoid function dependency */
 template <typename T, std::size_t N>
@@ -382,9 +382,10 @@ constexpr Matrix<T, N, N> Inverse(const Matrix<T, N, N>& mat) {
   }
   return result;
 }
+
 /************************
-     * Matrix Constants      *
-     *************************/
+* Matrix Constants      *
+*************************/
 
 struct PredefinedMatrices {
   template <typename T = double, std::size_t N = 4>

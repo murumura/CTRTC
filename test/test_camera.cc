@@ -13,7 +13,7 @@ TEST(Camera, constrctor) {
   EXPECT_EQ(c.VerticalSize(), vsize);
   EXPECT_EQ(c.FieldOfView(), fov);
   constexpr auto I4 = PredefinedMatrices::I<double, 4>;
-  EXPECT_EQ(c.Transform(), I4);
+  EXPECT_EQ(c.TransformMatrix(), I4);
 }
 
 TEST(Camera, pixel_size_horizontal) {

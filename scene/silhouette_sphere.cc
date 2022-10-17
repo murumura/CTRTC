@@ -2,6 +2,7 @@
 #include <shape.hh>
 #include <vec.hh>
 using namespace RayTracer;
+
 #ifdef COMPILETIME
 template <std::size_t canvasPixels>
 constexpr auto RenderStaticChapter6() {
@@ -55,7 +56,7 @@ int main() {
         it is best not to adjust the canvas size too much, 100-300 pixels would be a good choice,
         otherwise it will take a long time to compile
     */
-  static constexpr std::size_t canvasPixels = 260;
+  static constexpr std::size_t canvasPixels = 50;
 #ifdef COMPILETIME
   constexpr auto canvas = RenderStaticChapter6<canvasPixels>();
 #else

@@ -218,7 +218,7 @@ class Sphere : public Shape<Sphere> {
       const auto& [r1, r2] = res.value();
       return StaticVector<Intersection, 2>{Intersection(r1, ptrSelf),
                                            Intersection(r2, ptrSelf)};
-    } else //Currently a workaround for non-hitting, TODO: account for a more elegent solution in the future
+    } else  // Currently a workaround for non-hitting, TODO: account for a more elegent solution in the future
       return StaticVector<Intersection, 2>{Intersection(-1, nullptr),
                                            Intersection(-1, nullptr)};
   }

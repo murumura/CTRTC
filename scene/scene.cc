@@ -56,6 +56,7 @@ int main() {
   constexpr Transform rightWallTF =
       MatrixUtils::Translation(0.0, 0.0, 5.0) * MatrixUtils::RotateY(pi / 4.0) *
       MatrixUtils::RotateX(pi / 2.0) * MatrixUtils::Scale(10, 0.01, 10);
+
   constexpr Sphere rightWall = [&]() {
     Sphere ret = Sphere{rightWallTF};
     ret.SetMaterial(matte);

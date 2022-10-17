@@ -1,4 +1,4 @@
-# CT-RayTracerChallenge (CTRTC)
+# Compile-Time-RayTracerChallenge (CTRTC)
 Ray tracer implementation in C++ inspired by Jamis Buck's book "The Ray Tracer Challenge".
 
 This is a C++20 ray tracer project using constexpr function evaluation to make all computation happend entirely at compile-time.
@@ -28,7 +28,7 @@ sudo apt-get install -y libgtest-dev
 sudo apt-get install -y g++-12 gcc-12
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12 --slave /usr/bin/gcov gcov /usr/bin/gcov-12
 # (optional) or install clang14 if you want
-sudo apt-get install -y clang14
+sudo apt-get install -y clang-14
 sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-14 40
 ```
 
