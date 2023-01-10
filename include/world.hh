@@ -57,10 +57,27 @@ class World {
   }
 
   template <std::size_t N>
+  constexpr bool IsShadowed(const Tuple& point, const PointLight& light) const {
+    const Tuple vectorPL =
+        (light.position - point);  // direction vector from point to light
+    const double distancePL = vectorPL.Magnitude();
+    const Tuple vectorPLNormalized = ToNormalizedVector(vectorPL);
+    const Ray shadowRay = Ray(point, ToNormalizedVector(vectorPL));
+
+    // Cast a shadow ray to see if it intersects anything.
+    const auto xs = IntersectWithRay<N>(shadowRay);
+
+    // find the hit from the resulting intersections
+    const auto I = IntersectionUtils::VisibleHit(xs);
+
+    return I.has_value() && I.value().GetIntersectDistance() < distancePL;
+  }
+
+  template <std::size_t N>
   constexpr Colour ColorAt(const Ray& ray) const {
     // find the intersections with given ray
     const auto xs = IntersectWithRay<N>(ray);
-    // find the hit from the resultings intersections
+    // find the hit from the resulting intersections
     const auto I = IntersectionUtils::VisibleHit(xs);
     // return the color black if there is no such intersections
     if (!I.has_value() || !I.value().shapePtr)

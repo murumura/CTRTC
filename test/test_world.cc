@@ -111,3 +111,28 @@ TEST(World, color_with_ray_intersect_behind_scene) {
   constexpr auto colour = world.ColorAt<numXS>(ray);
   EXPECT_EQ(colour, innerShape.GetMaterial().color);
 }
+
+TEST(World, no_shadow_when_collinear) {
+  // There is no shadow when nothing is collinear with the point and light
+  constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
+  constexpr Tuple point = MakePoint(0, 10, 0);
+  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
+  constexpr bool isShadowed =
+      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+  EXPECT_FALSE(isShadowed);
+}
+
+TEST(World, in_shadow_when_object_in_middle) {
+  // The shadow when an object is between the point and the light
+  // TODO
+}
+
+TEST(World, no_shadow_when_object_behind_light) {
+  // There is no shadow when an object is behind the light
+  // TOOD
+}
+
+TEST(World, no_shadow_when_object_behind_point) {
+  // There is no shadow when an object is behind the point
+  // TODO
+}

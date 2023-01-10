@@ -41,7 +41,6 @@ set(project_headers
     ${CMAKE_SOURCE_DIR}/include/primitives/vec.hh
     ${CMAKE_SOURCE_DIR}/include/primitives/matrix.hh
     ${CMAKE_SOURCE_DIR}/include/primitives/static_base.hh
-    ${CMAKE_SOURCE_DIR}/include/primitives/dynamic_vector.hh
     ${CMAKE_SOURCE_DIR}/include/primitives/static_vector.hh
     ${CMAKE_SOURCE_DIR}/include/primitives/primitive_traits.hh
     ${CMAKE_SOURCE_DIR}/include/utils/math.hh

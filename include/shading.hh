@@ -44,7 +44,8 @@ class Material {
 [[nodiscard]] constexpr Colour lighting(const Material& material,
                                         const PointLight& light,
                                         const Tuple& point, const Tuple& eye,
-                                        const Tuple& normal) noexcept {
+                                        const Tuple& normal,
+                                        const bool inShadow = false) noexcept {
   // combine the surface color with the light's color/intensity
   const Colour effectiveColour = material.color * light.intensity;
 
@@ -53,6 +54,10 @@ class Material {
 
   // compute the ambient contribution
   const Colour ambient = effectiveColour * material.ambient;
+
+  // when the point is in shadow  use only the ambient component
+  if (inShadow)
+    return ambient;
 
   // light_dot_normal represent the cosine of the angle between the
   // light vector and the normal vector.

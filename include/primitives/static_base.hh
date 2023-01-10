@@ -1,10 +1,10 @@
 #ifndef STATICBASE_HH
 #define STATICBASE_HH
 namespace RayTracer {
-template <typename Derived, template <typename> class crtpType>
+template <typename Derived, template <typename> class CrtpType>
 class StaticBase {
   StaticBase() = default;
-  friend crtpType<Derived>;
+  friend CrtpType<Derived>;
 
  public:
   constexpr Derived& derived() { return static_cast<Derived&>(*this); }

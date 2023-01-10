@@ -82,3 +82,14 @@ TEST(Material, light_behind_surface) {
   constexpr auto result = lighting(m, light, position, eyeV, normalV);
   EXPECT_EQ(result, MakeColour(0.1, 0.1, 0.1));
 }
+
+TEST(Material, light_with_surface_in_shadow) {
+  constexpr Material m;
+  constexpr auto position = PredefinedTuples::ZeroPoint;
+  constexpr auto eyeV = MakeVector(0, 0, -1);
+  constexpr auto normalV = MakeVector(0, 0, -1);
+  constexpr bool inShadow = true;
+  constexpr PointLight light{MakePoint(0, 0, -10), PredefinedColours::WHITE};
+  constexpr auto result = lighting(m, light, position, eyeV, normalV, inShadow);
+  EXPECT_EQ(result, MakeColour(0.1, 0.1, 0.1));
+}
