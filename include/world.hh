@@ -1,6 +1,7 @@
 #ifndef WORLD_HH
 #define WORLD_HH
 #include <concepts>
+#include <iostream>
 #include <shading.hh>
 #include <shape.hh>
 #include <tuple>
@@ -8,10 +9,6 @@ namespace RayTracer {
 
 template <typename T>
 using uncvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
-
-// helper constant for the visitor
-template <class>
-inline constexpr bool always_false_v = false;
 
 template <class ShapeContainer, class LightContainer>
 class World {
@@ -46,23 +43,26 @@ class World {
     return IntersectionUtils::SortIntersections(ret);
   }
 
+  template <std::size_t N>
   constexpr Colour ShadeHit(const HitRecord& hitRecord) const {
     Colour color = PredefinedColours::BLACK;
     // supporting multiple light sources
     for (int i = 0; i < lights.size(); i++) {
+      bool isInShadow = IsShadowed<N>(hitRecord.pointOverSurface, lights[i]);
       color += lighting(hitRecord.shapePtr->GetMaterial(), lights[i],
-                        hitRecord.point, hitRecord.eyeV, hitRecord.normalV);
+                        hitRecord.pointOverSurface, hitRecord.eyeV,
+                        hitRecord.normalV, isInShadow);
     }
     return color;
   }
 
   template <std::size_t N>
   constexpr bool IsShadowed(const Tuple& point, const PointLight& light) const {
-    const Tuple vectorPL =
+    const Tuple v =
         (light.position - point);  // direction vector from point to light
-    const double distancePL = vectorPL.Magnitude();
-    const Tuple vectorPLNormalized = ToNormalizedVector(vectorPL);
-    const Ray shadowRay = Ray(point, ToNormalizedVector(vectorPL));
+    const double distance = v.Magnitude();
+    const Tuple direction = ToNormalizedVector(v);
+    const Ray shadowRay = Ray(point, direction);
 
     // Cast a shadow ray to see if it intersects anything.
     const auto xs = IntersectWithRay<N>(shadowRay);
@@ -70,7 +70,7 @@ class World {
     // find the hit from the resulting intersections
     const auto I = IntersectionUtils::VisibleHit(xs);
 
-    return I.has_value() && I.value().GetIntersectDistance() < distancePL;
+    return I.has_value() && I.value().GetIntersectDistance() < distance;
   }
 
   template <std::size_t N>
@@ -79,13 +79,13 @@ class World {
     const auto xs = IntersectWithRay<N>(ray);
     // find the hit from the resulting intersections
     const auto I = IntersectionUtils::VisibleHit(xs);
-    // return the color black if there is no such intersections
-    if (!I.has_value() || !I.value().shapePtr)
+    // return the color black if there is no such intersection
+    if (!I.has_value() || !I.value().shapePtr || I == std::nullopt)
       return PredefinedColours::BLACK;
     // otherwise, precompute the necessary values
     const auto hitRecord = I.value().PrepareComputation(ray);
     // find the color at the hit
-    return ShadeHit(hitRecord);
+    return ShadeHit<N>(hitRecord);
   }
 
   constexpr std::size_t PossibleXSNums() const {

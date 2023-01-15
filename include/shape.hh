@@ -20,6 +20,7 @@ struct HitRecord {
   const ShapeWrapper* shapePtr{nullptr};
   Tuple eyeV;
   Tuple point;
+  Tuple pointOverSurface;
   Tuple normalV;
   bool inside;
 };
@@ -291,6 +292,7 @@ constexpr HitRecord Intersection::PrepareComputation(const Ray& ray) const {
   returnRec.inside = returnRec.normalV.DotProduct(returnRec.eyeV) < 0;
   // The normal is inverted when the hit occurs inside the object
   returnRec.normalV = returnRec.inside ? -normalV : normalV;
+  returnRec.pointOverSurface = returnRec.point + (returnRec.normalV * EPSILON);
   return returnRec;
 }
 

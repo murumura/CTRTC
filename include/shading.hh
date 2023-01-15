@@ -55,7 +55,7 @@ class Material {
   // compute the ambient contribution
   const Colour ambient = effectiveColour * material.ambient;
 
-  // when the point is in shadow  use only the ambient component
+  // when the point is in shadow use only the ambient component
   if (inShadow)
     return ambient;
 
@@ -75,8 +75,8 @@ class Material {
           : effectiveColour * material.diffuse * lightDotNormal;
   // clang-format off
        
-        const auto specular = (lightDotNormal < 0 || reflectDotEye <= 0) ? PredefinedColours::BLACK
-                                                : light.intensity * material.specular * MathUtils::ConstExprExp(reflectDotEye, material.shininess);
+  const auto specular = (lightDotNormal < 0 || reflectDotEye <= 0) ? PredefinedColours::BLACK
+                    : light.intensity * material.specular * MathUtils::ConstExprExp(reflectDotEye, material.shininess);
 
   // clang-format on
   return ambient + diffuse + specular;

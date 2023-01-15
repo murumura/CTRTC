@@ -106,3 +106,17 @@ TEST(Intersection, intersect_with_translated_sphere) {
   constexpr auto I = IntersectionUtils::VisibleHit(xs);
   EXPECT_EQ(I, std::nullopt);
 }
+
+TEST(Intersection, hit_should_fall_above_point) {
+  constexpr Tuple origin = MakePoint(0, 0, -5);
+  constexpr Tuple direction = MakeVector(0, 0, 1);
+  constexpr Ray ray{origin, direction};
+  constexpr Transform translation = MatrixUtils::Translation(0.0, 0.0, 1.0);
+  constexpr Sphere s = Sphere{translation};
+  static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(s);
+  constexpr auto I = Intersection(5, &shapeWrapper);
+  constexpr auto hitRecord = I.PrepareComputation(ray);
+  EXPECT_LE(hitRecord.pointOverSurface[TupleConstants::z], -(EPSILON / 2.0));
+  EXPECT_GE(hitRecord.point[TupleConstants::z],
+            hitRecord.pointOverSurface[TupleConstants::z]);
+}

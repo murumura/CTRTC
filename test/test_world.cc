@@ -124,15 +124,51 @@ TEST(World, no_shadow_when_collinear) {
 
 TEST(World, in_shadow_when_object_in_middle) {
   // The shadow when an object is between the point and the light
-  // TODO
+  constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
+  constexpr Tuple point = MakePoint(10, -10, 10);
+  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
+  constexpr bool isShadowed =
+      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+  EXPECT_TRUE(isShadowed);
 }
 
 TEST(World, no_shadow_when_object_behind_light) {
   // There is no shadow when an object is behind the light
-  // TOOD
+  constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
+  constexpr Tuple point = MakePoint(20, 20, -20);
+  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
+  constexpr bool isShadowed =
+      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+  EXPECT_FALSE(isShadowed);
 }
 
 TEST(World, no_shadow_when_object_behind_point) {
   // There is no shadow when an object is behind the point
-  // TODO
+  constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
+  constexpr Tuple point = MakePoint(-2, 2, -2);
+  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
+  constexpr bool isShadowed =
+      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+  EXPECT_FALSE(isShadowed);
+}
+TEST(World, intersection_in_shadow) {
+  // ShadeHit is given an intersection in shadow
+  constexpr PointLight light =
+      PointLight(MakePoint(0, 0, -10), MakeColour(1, 1, 1));
+  constexpr std::array<PointLight, 1> lights = {light};
+  constexpr Sphere s1;
+  constexpr Transform translation = MatrixUtils::Translation(0.0, 0.0, 10.0);
+  constexpr Sphere s2 = Sphere{translation};
+  constexpr std::array<ShapeWrapper, 2> shapes = {s1, s2};
+  constexpr World<decltype(shapes), decltype(lights)> world{std::move(shapes),
+                                                            std::move(lights)};
+  constexpr std::size_t numXS = world.PossibleXSNums();
+  constexpr Tuple origin = MakePoint(0, 0, 5);
+  constexpr Tuple direction = MakeVector(0, 0, 1);
+  constexpr Ray ray{origin, direction};
+  static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(s2);
+  constexpr auto I = Intersection(4, &shapeWrapper);
+  constexpr auto hitRecord = I.PrepareComputation(ray);
+  constexpr auto colour = world.ShadeHit<numXS>(hitRecord);
+  EXPECT_EQ(colour, MakeColour(0.1, 0.1, 0.1));
 }
