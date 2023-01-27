@@ -13,8 +13,8 @@ int main() {
   */
 
   constexpr auto pi = MathUtils::MathConstants::PI<double>;
-  static constexpr std::size_t hsize = 80;
-  static constexpr std::size_t vsize = 40;
+  static constexpr std::size_t hsize = 480;
+  static constexpr std::size_t vsize = 350;
 
   /* 
     (1) The floor is an extremely flatten sphere with a matte texture 
@@ -133,16 +133,15 @@ int main() {
   constexpr auto lightColour = MakeColour(1, 1, 1);  // white
   constexpr auto light = PointLight(lightPoint, lightColour);
   constexpr std::array<PointLight, 1> lights = {light};
-
+  constexpr std::size_t numXS =
+      NumXSOf<Sphere, Sphere, Sphere, Sphere, Sphere, Sphere>::numXS;
   // Made up world
-  constexpr World<decltype(shapes), decltype(lights)> world{std::move(shapes),
-                                                            std::move(lights)};
-  constexpr std::size_t numXS = world.PossibleXSNums();
+  constexpr World<decltype(shapes), decltype(lights), numXS> world{
+      std::move(shapes), std::move(lights)};
 #ifdef COMPILETIME
-  constexpr auto image =
-      camera.render<hsize, vsize, numXS, decltype(world)>(world);
+  constexpr auto image = camera.render<hsize, vsize, decltype(world)>(world);
 #else
-  auto image = camera.render<hsize, vsize, numXS, decltype(world)>(world);
+  auto image = camera.render<hsize, vsize, decltype(world)>(world);
 #endif
   image.ToPPM("scene.ppm");
 }

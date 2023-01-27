@@ -167,6 +167,7 @@ class Shape : public StaticBase<T, Shape> {
   constexpr ShapeType GetShapeType() const {
     return this->derived().GetShapeType();
   }
+
   constexpr void SetMaterial(const Material& material_) {
     material = material_;
   }
@@ -200,6 +201,7 @@ struct SphereTrait {
   static constexpr std::size_t NumIntersections = 2;
   static constexpr std::size_t ReturnIndex = 0;
 };
+
 }  // namespace ShapeTraits
 class Sphere : public Shape<Sphere> {
  public:

@@ -66,9 +66,8 @@ TEST(Camera, render_a_world) {
   constexpr std::size_t hsize = 11;
   constexpr std::size_t vsize = 11;
   constexpr auto cam = Camera{hsize, vsize, pi / 2, c2w};
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
   constexpr auto image =
-      cam.render<hsize, vsize, numXS, decltype(defaultWorld)>(defaultWorld);
+      cam.render<hsize, vsize, decltype(defaultWorld)>(defaultWorld);
 
   EXPECT_EQ(image(5, 5), MakeColour(0.38066, 0.47583, 0.2855));
 }

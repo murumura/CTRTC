@@ -34,8 +34,7 @@ TEST(World, intersect_world_with_a_ray) {
   constexpr Tuple origin = MakePoint(0, 0, -5);
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
-  constexpr auto xs = defaultWorld.IntersectWithRay<numXS>(ray);
+  constexpr auto xs = defaultWorld.IntersectWithRay(ray);
   EXPECT_EQ(xs[0].GetIntersectDistance(), 4.0);
   EXPECT_EQ(xs[1].GetIntersectDistance(), 4.5);
   EXPECT_EQ(xs[2].GetIntersectDistance(), 5.5);
@@ -65,8 +64,7 @@ TEST(World, color_when_ray_hits) {
   constexpr Tuple origin = MakePoint(0, 0, -5);
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
-  constexpr auto colour = defaultWorld.ColorAt<numXS>(ray);
+  constexpr auto colour = defaultWorld.ColorAt(ray);
   EXPECT_EQ(colour, MakeColour(0.38066, 0.47583, 0.2855));
 }
 
@@ -75,8 +73,7 @@ TEST(World, color_when_ray_misses) {
   constexpr Tuple origin = MakePoint(0, 0, -5);
   constexpr Tuple direction = MakeVector(0, 1, 0);
   constexpr Ray ray{origin, direction};
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
-  constexpr auto colour = defaultWorld.ColorAt<numXS>(ray);
+  constexpr auto colour = defaultWorld.ColorAt(ray);
   EXPECT_EQ(colour, PredefinedColours::BLACK);
 }
 
@@ -100,15 +97,15 @@ TEST(World, color_with_ray_intersect_behind_scene) {
     return ret;
   }();
   constexpr std::array<ShapeWrapper, 2> shapes = {s1, s2};
-  constexpr World<decltype(shapes), decltype(lights)> world{std::move(shapes),
-                                                            std::move(lights)};
+  constexpr std::size_t numXS = NumXSOf<Sphere, Sphere>::numXS;
+  constexpr World<decltype(shapes), decltype(lights), numXS> world{
+      std::move(shapes), std::move(lights)};
   constexpr Tuple origin = MakePoint(0, 0, 0.75);
   constexpr Tuple direction = MakeVector(0, 0, -1);
   constexpr Ray ray{origin, direction};
   constexpr auto outerShape = world.GetShapes()[0];
   constexpr auto innerShape = world.GetShapes()[1];
-  constexpr std::size_t numXS = world.PossibleXSNums();
-  constexpr auto colour = world.ColorAt<numXS>(ray);
+  constexpr auto colour = world.ColorAt(ray);
   EXPECT_EQ(colour, innerShape.GetMaterial().color);
 }
 
@@ -116,9 +113,8 @@ TEST(World, no_shadow_when_collinear) {
   // There is no shadow when nothing is collinear with the point and light
   constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
   constexpr Tuple point = MakePoint(0, 10, 0);
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
   constexpr bool isShadowed =
-      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+      defaultWorld.IsShadowed(point, defaultWorld.GetLights()[0]);
   EXPECT_FALSE(isShadowed);
 }
 
@@ -126,9 +122,8 @@ TEST(World, in_shadow_when_object_in_middle) {
   // The shadow when an object is between the point and the light
   constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
   constexpr Tuple point = MakePoint(10, -10, 10);
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
   constexpr bool isShadowed =
-      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+      defaultWorld.IsShadowed(point, defaultWorld.GetLights()[0]);
   EXPECT_TRUE(isShadowed);
 }
 
@@ -136,9 +131,8 @@ TEST(World, no_shadow_when_object_behind_light) {
   // There is no shadow when an object is behind the light
   constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
   constexpr Tuple point = MakePoint(20, 20, -20);
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
   constexpr bool isShadowed =
-      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+      defaultWorld.IsShadowed(point, defaultWorld.GetLights()[0]);
   EXPECT_FALSE(isShadowed);
 }
 
@@ -146,11 +140,11 @@ TEST(World, no_shadow_when_object_behind_point) {
   // There is no shadow when an object is behind the point
   constexpr auto static defaultWorld = WorldUtils::DefaultWorld();
   constexpr Tuple point = MakePoint(-2, 2, -2);
-  constexpr std::size_t numXS = defaultWorld.PossibleXSNums();
   constexpr bool isShadowed =
-      defaultWorld.IsShadowed<numXS>(point, defaultWorld.GetLights()[0]);
+      defaultWorld.IsShadowed(point, defaultWorld.GetLights()[0]);
   EXPECT_FALSE(isShadowed);
 }
+
 TEST(World, intersection_in_shadow) {
   // ShadeHit is given an intersection in shadow
   constexpr PointLight light =
@@ -160,15 +154,15 @@ TEST(World, intersection_in_shadow) {
   constexpr Transform translation = MatrixUtils::Translation(0.0, 0.0, 10.0);
   constexpr Sphere s2 = Sphere{translation};
   constexpr std::array<ShapeWrapper, 2> shapes = {s1, s2};
-  constexpr World<decltype(shapes), decltype(lights)> world{std::move(shapes),
-                                                            std::move(lights)};
-  constexpr std::size_t numXS = world.PossibleXSNums();
+  static constexpr std::size_t numXS = NumXSOf<Sphere, Sphere>::numXS;
+  constexpr World<decltype(shapes), decltype(lights), numXS> world{
+      std::move(shapes), std::move(lights)};
   constexpr Tuple origin = MakePoint(0, 0, 5);
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(s2);
   constexpr auto I = Intersection(4, &shapeWrapper);
   constexpr auto hitRecord = I.PrepareComputation(ray);
-  constexpr auto colour = world.ShadeHit<numXS>(hitRecord);
+  constexpr auto colour = world.ShadeHit(hitRecord);
   EXPECT_EQ(colour, MakeColour(0.1, 0.1, 0.1));
 }

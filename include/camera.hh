@@ -95,14 +95,14 @@ class Camera final {
     return Ray{originCam, directionCam};
   }
 
-  template <std::size_t W, std::size_t H, std::size_t NumXS, class World>
+  template <std::size_t W, std::size_t H, class World>
   constexpr auto render(const World& world) const {
     auto image = [&]() {
       Canvas<W, H> canvas;
       for (std::size_t y = 0; y < H; ++y) {
         for (std::size_t x = 0; x < W; ++x) {
           const auto ray = RayForPixel(x, y);
-          const auto colour = world.template ColorAt<NumXS>(ray);
+          const auto colour = world.ColorAt(ray);
           canvas(y, x) = colour;
         }
       }

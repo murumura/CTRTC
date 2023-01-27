@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(project_test
+
     ${CMAKE_SOURCE_DIR}/test/main.cc
     ${CMAKE_SOURCE_DIR}/test/test_vec.cc
     ${CMAKE_SOURCE_DIR}/test/test_matrix.cc

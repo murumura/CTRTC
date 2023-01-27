@@ -21,6 +21,8 @@ else ifeq ($(_CH), 6)
 	CHVAR := CHAPTER6
 else ifeq ($(_CH), 7)
 	CHVAR := CHAPTER7
+else ifeq ($(_CH), 8)
+	CHVAR := CHAPTER8
 endif
 
 TEST_DEF := OFF
@@ -72,4 +74,4 @@ $(BUILDDIR)/Makefile:
 
 .PHONY: docker-run
 docker-run:
-	-@sh $(DOCKER_DIR)/run.sh
+	-@bash $(DOCKER_DIR)/run.sh

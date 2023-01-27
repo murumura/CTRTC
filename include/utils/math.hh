@@ -82,14 +82,14 @@ requires(std::conjunction_v<std::is_arithmetic<
 }
 
 /** @brief compute taylor series for sine/cosine in recursive fasion
-         * @param x: initial value
-         * @param sum: summation term from previous funtion call
-         * @param fact: factorial term, e.g 3!, 5!, ...
-         * @param i: iteration index for this iteration
-         * @param sign: sign for this iteration
-         * @param xProduct: product term of x, e.g x^2, x^4, ...
-         * @return Traiangle expannsion value
-         */
+ * @param x: initial value
+ * @param sum: summation term from previous funtion call
+ * @param fact: factorial term, e.g 3!, 5!, ...
+ * @param i: iteration index for this iteration
+ * @param sign: sign for this iteration
+ * @param xProduct: product term of x, e.g x^2, x^4, ...
+ * @return Traiangle expannsion value
+ */
 template <typename T>
 requires(std::is_floating_point_v<T>) constexpr T
     TaylorSeries(T x, T sum, T fact, int i, int sign, T xProduct) {

@@ -99,3 +99,21 @@ make CH=7 STATIC=1
   
 </p>
 </details>
+
+<details><summary>Chapter8</summary>
+<p>
+
+```bash
+cd CTRTC
+make clean # for tidy check
+make CH=8 # render at run time
+# ---or render at compile time, this would take up ~30 min to finish
+make CH=8 STATIC=1 
+./build/default/debug/scene/CHAPTER8
+```
+
+
+  ![Silhouette](results/scene-shadow.png)
+  
+</p>
+</details>

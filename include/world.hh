@@ -1,7 +1,6 @@
 #ifndef WORLD_HH
 #define WORLD_HH
 #include <concepts>
-#include <iostream>
 #include <shading.hh>
 #include <shape.hh>
 #include <tuple>
@@ -10,7 +9,18 @@ namespace RayTracer {
 template <typename T>
 using uncvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-template <class ShapeContainer, class LightContainer>
+template <typename... Ts>
+struct NumXSOf {
+  static constexpr int numXS = 0;
+};
+
+template <typename... Ts>
+struct NumXSOf<Sphere, Ts...> {
+  static constexpr int numXS =
+      ShapeTraits::SphereTrait::NumIntersections + NumXSOf<Ts...>::numXS;
+};
+
+template <class ShapeContainer, class LightContainer, std::size_t NumXS_ = 10>
 class World {
  public:
   constexpr World(ShapeContainer&& shapeContainer,
@@ -18,10 +28,11 @@ class World {
       : shapes{std::forward<ShapeContainer>(shapeContainer)},
         lights{std::forward<LightContainer>(lightContainer)} {}
 
-  template <std::size_t N>
+  static constexpr std::size_t NumXS{NumXS_};
+
   constexpr auto IntersectWithRay(const Ray& ray) const
-      -> std::array<Intersection, N> {
-    std::array<Intersection, N> ret = {};
+      -> std::array<Intersection, NumXS> {
+    std::array<Intersection, NumXS> ret = {};
     std::size_t iter = 0;
     for (int i = 0; i < shapes.size(); i++) {
       const auto variant = shapes[i].IntersectWith(ray);
@@ -43,12 +54,11 @@ class World {
     return IntersectionUtils::SortIntersections(ret);
   }
 
-  template <std::size_t N>
   constexpr Colour ShadeHit(const HitRecord& hitRecord) const {
     Colour color = PredefinedColours::BLACK;
     // supporting multiple light sources
     for (int i = 0; i < lights.size(); i++) {
-      bool isInShadow = IsShadowed<N>(hitRecord.pointOverSurface, lights[i]);
+      bool isInShadow = IsShadowed(hitRecord.pointOverSurface, lights[i]);
       color += lighting(hitRecord.shapePtr->GetMaterial(), lights[i],
                         hitRecord.pointOverSurface, hitRecord.eyeV,
                         hitRecord.normalV, isInShadow);
@@ -56,7 +66,6 @@ class World {
     return color;
   }
 
-  template <std::size_t N>
   constexpr bool IsShadowed(const Tuple& point, const PointLight& light) const {
     const Tuple v =
         (light.position - point);  // direction vector from point to light
@@ -65,7 +74,7 @@ class World {
     const Ray shadowRay = Ray(point, direction);
 
     // Cast a shadow ray to see if it intersects anything.
-    const auto xs = IntersectWithRay<N>(shadowRay);
+    const auto xs = IntersectWithRay(shadowRay);
 
     // find the hit from the resulting intersections
     const auto I = IntersectionUtils::VisibleHit(xs);
@@ -73,10 +82,9 @@ class World {
     return I.has_value() && I.value().GetIntersectDistance() < distance;
   }
 
-  template <std::size_t N>
   constexpr Colour ColorAt(const Ray& ray) const {
     // find the intersections with given ray
-    const auto xs = IntersectWithRay<N>(ray);
+    const auto xs = IntersectWithRay(ray);
     // find the hit from the resulting intersections
     const auto I = IntersectionUtils::VisibleHit(xs);
     // return the color black if there is no such intersection
@@ -85,19 +93,7 @@ class World {
     // otherwise, precompute the necessary values
     const auto hitRecord = I.value().PrepareComputation(ray);
     // find the color at the hit
-    return ShadeHit<N>(hitRecord);
-  }
-
-  constexpr std::size_t PossibleXSNums() const {
-    std::size_t numXs = 0;
-    for (int i = 0; i < shapes.size(); i++) {
-      const auto variant = shapes[i];
-      if constexpr (std::is_constructible_v<decltype(variant),
-                                            std::variant<Sphere>>) {
-        numXs += 2;
-      }
-    }
-    return numXs;
+    return ShadeHit(hitRecord);
   }
 
   template <typename ShapeType>
@@ -132,8 +128,10 @@ constexpr auto DefaultWorld() {
   Transform scale = MatrixUtils::Scale(0.5, 0.5, 0.5);
   Sphere s2 = Sphere{scale};
   std::array<ShapeWrapper, 2> shapes = {s1, s2};
-  World<decltype(shapes), decltype(lights)> defaultWorld{std::move(shapes),
-                                                         std::move(lights)};
+  const std::size_t numXS = NumXSOf<Sphere, Sphere>::numXS;
+
+  World<decltype(shapes), decltype(lights), numXS> defaultWorld{
+      std::move(shapes), std::move(lights)};
   return defaultWorld;
 }
 }  // namespace WorldUtils
