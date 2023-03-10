@@ -23,6 +23,8 @@ else ifeq ($(_CH), 7)
 	CHVAR := CHAPTER7
 else ifeq ($(_CH), 8)
 	CHVAR := CHAPTER8
+else ifeq ($(_CH), 9)
+	CHVAR := CHAPTER9
 endif
 
 TEST_DEF := OFF

@@ -144,7 +144,6 @@ requires(std::is_same_v<typename IntersectionList::value_type, Intersection>)
 
 [[nodiscard]] constexpr std::optional<Intersection> VisibleHitFromVariant(
     const IntxnRetVariant& variant) noexcept {
-
   auto visitor = [&](auto&& v) {
     using T = PrimitiveTraits::uncvref_t<decltype(v)>;
     if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
@@ -176,14 +175,17 @@ class Shape : public StaticBase<T, Shape> {
       const Transform& transform_ = PredefinedMatrices::I<double, 4>)
       : material{material_}, transform{transform_} {}
 
-  constexpr std::optional<Intersection> LocalIntersection(
+  constexpr IntxnRetVariant LocalIntersection(
       const Ray& ray, const ShapeWrapper* ptrSelf) const {
     return this->derived().LocalIntersection(ray, ptrSelf);
   }
 
-  constexpr std::optional<Intersection> IntersectWith(
-      const Ray& ray, const ShapeWrapper* ptrSelf) const {
-    return this->derived().IntersectWith(ray, ptrSelf);
+  constexpr auto IntersectWith(const Ray& ray,
+                               const ShapeWrapper* ptrSelf) const noexcept
+      -> IntxnRetVariant {
+    const auto invTransform = Inverse(transform);
+    const auto tranformedRay = ray.Transform(invTransform);
+    return LocalIntersection(tranformedRay, ptrSelf);
   }
 
   constexpr ShapeType GetShapeType() const {
@@ -256,14 +258,6 @@ class Plane : public Shape<Plane> {
     }
   }
 
-  constexpr auto IntersectWith(const Ray& ray,
-                               const ShapeWrapper* ptrSelf) const noexcept
-      -> IntxnRetVariant {
-    const auto invTransform = Inverse(transform);
-    const auto tranformedRay = ray.Transform(invTransform);
-    return LocalIntersection(tranformedRay, ptrSelf);
-  }
-
   template <typename OtherType>
   constexpr friend bool operator==(const Plane& lhs, const OtherType& rhs) {
     return lhs.GetShapeType() == rhs.GetShapeType() &&
@@ -297,14 +291,6 @@ class Sphere : public Shape<Sphere> {
     } else  // Currently a workaround for non-hitting, TODO: account for a more elegent solution in the future
       return IntxnRetVariant(StaticVector<Intersection, 2>{
           Intersection(-1, nullptr), Intersection(-1, nullptr)});
-  }
-
-  constexpr auto IntersectWith(const Ray& ray,
-                               const ShapeWrapper* ptrSelf) const noexcept
-      -> IntxnRetVariant {
-    const auto invTransform = Inverse(transform);
-    const auto tranformedRay = ray.Transform(invTransform);
-    return LocalIntersection(tranformedRay, ptrSelf);
   }
 
   template <typename OtherType>

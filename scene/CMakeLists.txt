@@ -39,3 +39,12 @@ if ((${RENDER_CHAPTER} STREQUAL 8))
     )
     target_compile_options(CHAPTER8  PUBLIC  ${COMPILE_DEFINITIONS})
 endif()
+
+
+if ((${RENDER_CHAPTER} STREQUAL 9))
+    add_executable(CHAPTER9
+        ${project_headers}
+        plane.cc
+    )
+    target_compile_options(CHAPTER9  PUBLIC  ${COMPILE_DEFINITIONS})
+endif()
