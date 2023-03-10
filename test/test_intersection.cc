@@ -4,7 +4,7 @@
 using namespace RayTracer;
 using testing::Eq;
 
-TEST(Intersection, encapsulates) {
+TEST(SphereIntersection, encapsulates) {
   // An intersection encapsulates the distance from the ray origin and the object intersected.
   constexpr Sphere sphere;
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
@@ -13,7 +13,7 @@ TEST(Intersection, encapsulates) {
   EXPECT_EQ(I.GetShapeType(), ShapeType::SphereTag);
 }
 
-TEST(Intersection, aggregations) {
+TEST(SphereIntersection, aggregations) {
   constexpr Sphere sphere;
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr auto I1 = Intersection(2, &shapeWrapper);
@@ -24,7 +24,7 @@ TEST(Intersection, aggregations) {
   EXPECT_EQ(xs[1], I1);
 }
 
-TEST(Intersection, intersection_object) {
+TEST(SphereIntersection, intersection_object) {
   // Intersect sets the object on the intersection
   // intersect with sphere should give us 2 intersection point
   constexpr Sphere sphere;
@@ -32,13 +32,14 @@ TEST(Intersection, intersection_object) {
   constexpr Tuple origin = MakePoint(0, 0, -5);
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
-  constexpr auto xs = sphere.IntersectWith(ray, &shapeWrapper);
+  constexpr auto xsVariant = sphere.IntersectWith(ray, &shapeWrapper);
+  const auto xs = std::get<StaticVector<Intersection, 2>>(xsVariant);
   EXPECT_EQ(xs.size(), 2);
   EXPECT_EQ(xs[0].GetShapeType(), ShapeType::SphereTag);
   EXPECT_EQ(xs[1].GetShapeType(), ShapeType::SphereTag);
 }
 
-TEST(Intersection, all_positive_distance) {
+TEST(SphereIntersection, all_positive_distance) {
   constexpr Sphere sphere;
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr auto I1 = Intersection(2, &shapeWrapper);
@@ -48,7 +49,7 @@ TEST(Intersection, all_positive_distance) {
   EXPECT_EQ(I, I2);
 }
 
-TEST(Intersection, some_negative_distance) {
+TEST(SphereIntersection, some_negative_distance) {
   constexpr Sphere sphere;
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr auto I1 = Intersection(-2, &shapeWrapper);
@@ -64,7 +65,7 @@ TEST(Intersection, some_negative_distance) {
   EXPECT_EQ(I, I4);
 }
 
-TEST(Intersection, all_negative_distance) {
+TEST(SphereIntersection, all_negative_distance) {
   constexpr Sphere sphere;
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr auto I1 = Intersection(-1, &shapeWrapper);
@@ -80,34 +81,37 @@ TEST(Intersection, all_negative_distance) {
   EXPECT_EQ(I, std::nullopt);
 }
 
-TEST(Intersection, intersect_with_scaled_sphere) {
+TEST(SphereIntersection, intersect_with_scaled_sphere) {
   constexpr auto scale = MatrixUtils::Scale(2, 2, 2);
   constexpr Sphere sphere{scale};
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr Tuple origin = MakePoint(0, 0, -5);
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
-  constexpr auto xs = sphere.IntersectWith(ray, &shapeWrapper);
+  constexpr auto xsVariant = sphere.IntersectWith(ray, &shapeWrapper);
+  const auto xs = std::get<StaticVector<Intersection, 2>>(xsVariant);
   EXPECT_EQ(xs.size(), 2);
   EXPECT_EQ(xs[0].GetIntersectDistance(), 3);
   EXPECT_EQ(xs[1].GetIntersectDistance(), 7);
 }
 
-TEST(Intersection, intersect_with_translated_sphere) {
+TEST(SphereIntersection, intersect_with_translated_sphere) {
   constexpr auto translation = MatrixUtils::Translation(5, 0, 0);
   constexpr Sphere sphere{translation};
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr Tuple origin = MakePoint(0, 0, -5);
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
-  constexpr auto xs = sphere.IntersectWith(ray, &shapeWrapper);
+  constexpr auto xsVariant = sphere.IntersectWith(ray, &shapeWrapper);
+  const auto xs = std::get<StaticVector<Intersection, 2>>(xsVariant);
   EXPECT_EQ(xs.size(), 2);
-  //TODO: a workaround for non-hitting : see shape.h for more details
-  constexpr auto I = IntersectionUtils::VisibleHit(xs);
+  // TODO: a workaround for non-hitting : see shape.h for more details
+  // This is different from book's illustrations
+  constexpr auto I = IntersectionUtils::VisibleHitFromVariant(xsVariant);
   EXPECT_EQ(I, std::nullopt);
 }
 
-TEST(Intersection, hit_should_fall_above_point) {
+TEST(SphereIntersection, hit_should_fall_above_point) {
   constexpr Tuple origin = MakePoint(0, 0, -5);
   constexpr Tuple direction = MakeVector(0, 0, 1);
   constexpr Ray ray{origin, direction};
@@ -119,4 +123,58 @@ TEST(Intersection, hit_should_fall_above_point) {
   EXPECT_LE(hitRecord.pointOverSurface[TupleConstants::z], -(EPSILON / 2.0));
   EXPECT_GE(hitRecord.point[TupleConstants::z],
             hitRecord.pointOverSurface[TupleConstants::z]);
+}
+
+TEST(PlaneIntersection, intersect_with_ray_parallel_to_plane) {
+  constexpr Tuple origin = MakePoint(0, 10, 0);
+  constexpr Tuple direction = MakeVector(0, 0, 1);
+  constexpr Ray ray{origin, direction};
+  constexpr Plane plane;
+  static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(plane);
+  constexpr auto xsVariant = plane.IntersectWith(ray, &shapeWrapper);
+  const auto xs = std::get<StaticVector<Intersection, 1>>(xsVariant);
+  EXPECT_EQ(xs.size(), 1);
+  // TODO: a workaround for non-hitting : see shape.h for more details
+  // This is different from book's illustrations
+  constexpr auto I = IntersectionUtils::VisibleHitFromVariant(xsVariant);
+  EXPECT_EQ(I, std::nullopt);
+}
+
+TEST(PlaneIntersection, intersect_with_ray_coplaner_to_plane) {
+  constexpr Tuple origin = MakePoint(0, 0, 0);
+  constexpr Tuple direction = MakeVector(0, 0, 1);
+  constexpr Ray ray{origin, direction};
+  constexpr Plane plane;
+  static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(plane);
+  constexpr auto xsVariant = plane.IntersectWith(ray, &shapeWrapper);
+  const auto xs = std::get<StaticVector<Intersection, 1>>(xsVariant);
+  EXPECT_EQ(xs.size(), 1);
+  // TODO: a workaround for non-hitting : see shape.h for more details
+  // This is different from book's illustrations
+  constexpr auto I = IntersectionUtils::VisibleHitFromVariant(xsVariant);
+  EXPECT_EQ(I, std::nullopt);
+}
+
+TEST(PlaneIntersection, intersect_with_ray_from_above) {
+  constexpr Tuple origin = MakePoint(0, 1, 0);
+  constexpr Tuple direction = MakeVector(0, -1, 0);
+  constexpr Ray ray{origin, direction};
+  constexpr Plane plane;
+  static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(plane);
+  constexpr auto xsVariant = plane.IntersectWith(ray, &shapeWrapper);
+  const auto xs = std::get<StaticVector<Intersection, 1>>(xsVariant);
+  EXPECT_EQ(xs.size(), 1);
+  EXPECT_EQ(xs[0].GetIntersectDistance(), 1);
+}
+
+TEST(PlaneIntersection, intersect_with_ray_from_below) {
+  constexpr Tuple origin = MakePoint(0, -1, 0);
+  constexpr Tuple direction = MakeVector(0, 1, 0);
+  constexpr Ray ray{origin, direction};
+  constexpr Plane plane;
+  static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(plane);
+  constexpr auto xsVariant = plane.IntersectWith(ray, &shapeWrapper);
+  const auto xs = std::get<StaticVector<Intersection, 1>>(xsVariant);
+  EXPECT_EQ(xs.size(), 1);
+  EXPECT_EQ(xs[0].GetIntersectDistance(), 1);
 }

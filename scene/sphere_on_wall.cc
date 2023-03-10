@@ -29,7 +29,7 @@ constexpr auto RenderStaticChapter5() {
         auto pointOnWall = MakePoint(worldX, worldY, wallZ);
         auto r = Ray(rayOrigin, ToNormalizedVector(pointOnWall - rayOrigin));
         auto xs = sphere.IntersectWith(r, &shapeWrapper);
-        auto I = IntersectionUtils::VisibleHit(xs);
+        auto I = IntersectionUtils::VisibleHitFromVariant(xs);
         if (I.has_value())
           canvas(x, y) = plotColor;
       }
@@ -67,7 +67,7 @@ int main() {
       auto pointOnWall = MakePoint(worldX, worldY, wallZ);
       auto r = Ray(rayOrigin, ToNormalizedVector(pointOnWall - rayOrigin));
       auto xs = sphere.IntersectWith(r, &shapeWrapper);
-      auto I = IntersectionUtils::VisibleHit(xs);
+      auto I = IntersectionUtils::VisibleHitFromVariant(xs);
       if (I.has_value())
         canvas(x, y) = plotColor;
     }

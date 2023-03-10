@@ -32,7 +32,7 @@ constexpr auto RenderStaticChapter6() {
         auto pointOnWall = MakePoint(worldX, worldY, wallZ);
         auto r = Ray(rayOrigin, ToNormalizedVector(pointOnWall - rayOrigin));
         auto xs = sphere.IntersectWith(r, &shapeWrapper);
-        auto I = IntersectionUtils::VisibleHit(xs);
+        auto I = IntersectionUtils::VisibleHitFromVariant(xs);
         if (I.has_value()) {
           auto& nearestHit = I.value();
           // nearest intersection point in world-space
@@ -88,7 +88,7 @@ int main() {
       auto pointOnWall = MakePoint(worldX, worldY, wallZ);
       auto r = Ray(rayOrigin, ToNormalizedVector(pointOnWall - rayOrigin));
       auto xs = sphere.IntersectWith(r, &shapeWrapper);
-      auto I = IntersectionUtils::VisibleHit(xs);
+      auto I = IntersectionUtils::VisibleHitFromVariant(xs);
       if (I.has_value()) {
         auto& nearestHit = I.value();
         // nearest intersection point in world-space

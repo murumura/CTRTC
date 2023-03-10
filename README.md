@@ -17,7 +17,7 @@ Compiler | Version
 GCC      | 12.1.0
 clang    | 14.0.0
 
-With Ubuntu 22.04(the O.S I used), one could easily install and setup enviorments needed for this project by:
+With Ubuntu 22.04 (the O.S I used), one could easily install and setup enviorments needed for this project by:
 ```bash
 # Install Make/CMake
 sudo apt-get install -y build-essential
@@ -34,8 +34,9 @@ sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-14 40
 
 **WARNING**
 
-While compile-time image generation works with GCC 12, compiler memory usage is **extreme** -- tens of gigabytes for even modest image sizes. If you want to try it out with GCC, stick to very small images or prepare for violent retribution from the OOM-killer.
+(1) While compile-time image generation works with GCC 12, compiler memory usage is **extreme** -- tens of gigabytes for even modest image sizes. If you want to try it out with GCC, stick to very small images or prepare for violent retribution from the OOM-killer.
 
+(2) Alought I trying to follow and implment the testing examples in books, turning out there must be some trade-off for compile-time implementation in C++, therefore some test-cases mights look completely different from book illustrations (sending me pull requests if you think some implementations could be done better and better approximating examples from book).
 
 ## Build and run test suite
 Use the following commands from the project's top-most directory to run the test suite.

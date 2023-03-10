@@ -11,7 +11,7 @@
 #include <variant>
 namespace RayTracer {
 
-enum ShapeType { SphereTag, None };
+enum ShapeType { SphereTag, PlaneTag, None };
 
 class ShapeWrapper;
 
@@ -62,6 +62,9 @@ class Intersection {
 
   constexpr ShapeType GetShapeType() const;
 };
+
+using IntxnRetVariant =
+    std::variant<StaticVector<Intersection, 2>, StaticVector<Intersection, 1>>;
 
 constexpr bool operator==(const Intersection& lhs, const Intersection& rhs) {
   return MathUtils::ApproxEqual(lhs.GetIntersectDistance(),
@@ -139,6 +142,25 @@ requires(std::is_same_v<typename IntersectionList::value_type, Intersection>)
              : std::optional{intersections[0]};
 }
 
+[[nodiscard]] constexpr std::optional<Intersection> VisibleHitFromVariant(
+    const IntxnRetVariant& variant) noexcept {
+
+  auto visitor = [&](auto&& v) {
+    using T = PrimitiveTraits::uncvref_t<decltype(v)>;
+    if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
+      const auto xs = std::get<StaticVector<Intersection, 2>>(variant);
+      const auto ret = VisibleHit(xs);
+      return ret;
+    } else if constexpr (std::is_same_v<T, StaticVector<Intersection, 1>>) {
+      const auto xs = std::get<StaticVector<Intersection, 1>>(variant);
+      const auto ret = VisibleHit(xs);
+      return ret;
+    }
+  };
+  const auto ret = std::visit(visitor, variant);
+  return ret;
+}
+
 }  // namespace IntersectionUtils
 
 template <typename T>
@@ -173,8 +195,10 @@ class Shape : public StaticBase<T, Shape> {
   }
   constexpr Material GetMaterial() const { return material; }
 
+  constexpr Transform GetTransform() const { return transform; }
+
   constexpr Tuple LocalNormalAt(const Tuple& point) const {
-    return ToNormalizedVector(point - PredefinedTuples::ZeroPoint);
+    return this->derived().LocalNormalAt();
   }
 
   constexpr Tuple WorldNormalAt(const Tuple& worldPoint) const {
@@ -196,6 +220,12 @@ class Shape : public StaticBase<T, Shape> {
 
 namespace ShapeTraits {
 
+struct PlaneTrait {
+  using return_type = StaticVector<Intersection, 1>;
+  static constexpr std::size_t NumIntersections = 1;
+  static constexpr std::size_t ReturnIndex = 0;
+};
+
 struct SphereTrait {
   using return_type = StaticVector<Intersection, 2>;
   static constexpr std::size_t NumIntersections = 2;
@@ -203,13 +233,56 @@ struct SphereTrait {
 };
 
 }  // namespace ShapeTraits
+
+class Plane : public Shape<Plane> {
+ public:
+  constexpr ShapeType GetShapeType() const { return PlaneTag; }
+
+  constexpr Tuple LocalNormalAt(const Tuple& point) const {
+    return MakeVector(0, 1, 0);
+  }
+
+  constexpr auto LocalIntersection(const Ray& ray,
+                                   const ShapeWrapper* ptrSelf) const noexcept
+      -> IntxnRetVariant {
+    const float yDirection = ray.GetDirection()[TupleConstants::y];
+    if (MathUtils::ConstExprAbsf(yDirection) < EPSILON)
+      return IntxnRetVariant(
+          StaticVector<Intersection, 1>{Intersection(-1, nullptr)});
+    else {
+      const float t = (-ray.GetOrigin()[TupleConstants::y]) / yDirection;
+      return IntxnRetVariant(
+          StaticVector<Intersection, 1>{Intersection(t, ptrSelf)});
+    }
+  }
+
+  constexpr auto IntersectWith(const Ray& ray,
+                               const ShapeWrapper* ptrSelf) const noexcept
+      -> IntxnRetVariant {
+    const auto invTransform = Inverse(transform);
+    const auto tranformedRay = ray.Transform(invTransform);
+    return LocalIntersection(tranformedRay, ptrSelf);
+  }
+
+  template <typename OtherType>
+  constexpr friend bool operator==(const Plane& lhs, const OtherType& rhs) {
+    return lhs.GetShapeType() == rhs.GetShapeType() &&
+           lhs.GetTransform() == rhs.GetTransform() &&
+           lhs.GetMaterial() == rhs.GetMaterial();
+  }
+};
+
 class Sphere : public Shape<Sphere> {
  public:
   constexpr ShapeType GetShapeType() const { return SphereTag; }
 
+  constexpr Tuple LocalNormalAt(const Tuple& point) const {
+    return ToNormalizedVector(point - PredefinedTuples::ZeroPoint);
+  }
+
   constexpr auto LocalIntersection(const Ray& ray,
                                    const ShapeWrapper* ptrSelf) const noexcept
-      -> StaticVector<Intersection, 2> {
+      -> IntxnRetVariant {
     // Caculate distance between sphere to ray origin points assuming sphere's center located at world origin.
     const auto sphereToRay = ray.GetOrigin() - PredefinedTuples::ZeroPoint;
     const auto rayDir = ray.GetDirection();
@@ -219,23 +292,26 @@ class Sphere : public Shape<Sphere> {
 
     if (const auto& res = MathUtils::SolveQuadratic(a, b, c)) {
       const auto& [r1, r2] = res.value();
-      return StaticVector<Intersection, 2>{Intersection(r1, ptrSelf),
-                                           Intersection(r2, ptrSelf)};
+      return IntxnRetVariant(StaticVector<Intersection, 2>{
+          Intersection(r1, ptrSelf), Intersection(r2, ptrSelf)});
     } else  // Currently a workaround for non-hitting, TODO: account for a more elegent solution in the future
-      return StaticVector<Intersection, 2>{Intersection(-1, nullptr),
-                                           Intersection(-1, nullptr)};
+      return IntxnRetVariant(StaticVector<Intersection, 2>{
+          Intersection(-1, nullptr), Intersection(-1, nullptr)});
   }
 
   constexpr auto IntersectWith(const Ray& ray,
                                const ShapeWrapper* ptrSelf) const noexcept
-      -> StaticVector<Intersection, 2> {
+      -> IntxnRetVariant {
     const auto invTransform = Inverse(transform);
     const auto tranformedRay = ray.Transform(invTransform);
     return LocalIntersection(tranformedRay, ptrSelf);
   }
 
-  constexpr friend bool operator==(const Sphere& lhs, const Sphere& rhs) {
-    return lhs.transform == rhs.transform && lhs.material == rhs.material;
+  template <typename OtherType>
+  constexpr friend bool operator==(const Sphere& lhs, const OtherType& rhs) {
+    return lhs.GetShapeType() == rhs.GetShapeType() &&
+           lhs.GetTransform() == rhs.GetTransform() &&
+           lhs.GetMaterial() == rhs.GetMaterial();
   }
 };
 
@@ -244,8 +320,7 @@ class ShapeWrapper {
   template <typename T>
   constexpr ShapeWrapper(T&& elem) : shapeObject{std::forward<T>(elem)} {}
 
-  template <typename T>
-  constexpr bool operator==(T&& other) const {
+  constexpr bool operator==(ShapeWrapper&& other) const {
     return std::visit([&](auto const& elem) -> bool { return elem == other; },
                       shapeObject);
   }
@@ -262,6 +337,12 @@ class ShapeWrapper {
         shapeObject);
   }
 
+  constexpr Transform GetTransform() const {
+    return std::visit(
+        [&](auto const& elem) -> decltype(auto) { return elem.GetTransform(); },
+        shapeObject);
+  }
+
   constexpr Tuple GetWorldNormalAt(const Tuple& worldPoint) const {
     return std::visit(
         [&](auto const& elem) -> decltype(auto) {
@@ -270,14 +351,13 @@ class ShapeWrapper {
         shapeObject);
   }
 
-  constexpr auto IntersectWith(const Ray& ray) const
-      -> std::variant<StaticVector<Intersection, 2>,
-                      StaticVector<Intersection, 1>> {
+  constexpr auto IntersectWith(const Ray& ray) const -> IntxnRetVariant {
     return std::visit(
         [&](auto const& elem) { return elem.IntersectWith(ray, this); },
         shapeObject);
   }
-  std::variant<Sphere> shapeObject;
+
+  std::variant<Sphere, Plane> shapeObject;
 };
 
 constexpr ShapeType Intersection::GetShapeType() const {

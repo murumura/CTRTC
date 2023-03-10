@@ -6,9 +6,6 @@
 #include <tuple>
 namespace RayTracer {
 
-template <typename T>
-using uncvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
-
 template <typename... Ts>
 struct NumXSOf {
   static constexpr int numXS = 0;
@@ -18,6 +15,12 @@ template <typename... Ts>
 struct NumXSOf<Sphere, Ts...> {
   static constexpr int numXS =
       ShapeTraits::SphereTrait::NumIntersections + NumXSOf<Ts...>::numXS;
+};
+
+template <typename... Ts>
+struct NumXSOf<Plane, Ts...> {
+  static constexpr int numXS =
+      ShapeTraits::PlaneTrait::NumIntersections + NumXSOf<Ts...>::numXS;
 };
 
 template <class ShapeContainer, class LightContainer, std::size_t NumXS_ = 10>
@@ -37,7 +40,7 @@ class World {
     for (int i = 0; i < shapes.size(); i++) {
       const auto variant = shapes[i].IntersectWith(ray);
       auto visitor = [&](auto&& v) {
-        using T = uncvref_t<decltype(v)>;
+        using T = PrimitiveTraits::uncvref_t<decltype(v)>;
         if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
           const auto xs = std::get<StaticVector<Intersection, 2>>(variant);
           for (std::size_t i = 0; i < 2; i++)
@@ -74,7 +77,7 @@ class World {
     const Ray shadowRay = Ray(point, direction);
 
     // Cast a shadow ray to see if it intersects anything.
-    const auto xs = IntersectWithRay(shadowRay);
+    const auto xs = this->IntersectWithRay(shadowRay);
 
     // find the hit from the resulting intersections
     const auto I = IntersectionUtils::VisibleHit(xs);
@@ -84,7 +87,7 @@ class World {
 
   constexpr Colour ColorAt(const Ray& ray) const {
     // find the intersections with given ray
-    const auto xs = IntersectWithRay(ray);
+    const auto xs = this->IntersectWithRay(ray);
     // find the hit from the resulting intersections
     const auto I = IntersectionUtils::VisibleHit(xs);
     // return the color black if there is no such intersection

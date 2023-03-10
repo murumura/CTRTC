@@ -52,3 +52,16 @@ TEST(sphere, normal_on_a_translated_sphere_2) {
   constexpr auto n = s.WorldNormalAt(worldPoint);
   EXPECT_EQ(n, MakeVector(0, 0.97014, -0.24254));
 }
+
+TEST(plane, normal_of_plane_constant_everywhere) {
+  constexpr Plane p;
+  constexpr auto p1 = MakePoint(0, 0, 0);
+  constexpr auto p2 = MakePoint(10, 0, -10);
+  constexpr auto p3 = MakePoint(-5, 0, 150);
+  constexpr auto n1 = p.LocalNormalAt(p1);
+  constexpr auto n2 = p.LocalNormalAt(p2);
+  constexpr auto n3 = p.LocalNormalAt(p3);
+  EXPECT_EQ(n1, MakeVector(0, 1, 0));
+  EXPECT_EQ(n2, MakeVector(0, 1, 0));
+  EXPECT_EQ(n3, MakeVector(0, 1, 0));
+}
