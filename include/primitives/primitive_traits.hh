@@ -26,7 +26,7 @@ struct Contains : public std::bool_constant<(std::is_same<T, Args>{} || ...)> {
 };
 
 template <typename T>
-using uncvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+using RemoveCVR = std::remove_cv_t<std::remove_reference_t<T>>;
 
 }  // namespace PrimitiveTraits
 }  // namespace RayTracer

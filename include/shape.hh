@@ -145,7 +145,7 @@ requires(std::is_same_v<typename IntersectionList::value_type, Intersection>)
 [[nodiscard]] constexpr std::optional<Intersection> VisibleHitFromVariant(
     const IntxnRetVariant& variant) noexcept {
   auto visitor = [&](auto&& v) {
-    using T = PrimitiveTraits::uncvref_t<decltype(v)>;
+    using T = PrimitiveTraits::RemoveCVR<decltype(v)>;
     if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
       const auto xs = std::get<StaticVector<Intersection, 2>>(variant);
       const auto ret = VisibleHit(xs);
@@ -180,9 +180,8 @@ class Shape : public StaticBase<T, Shape> {
     return this->derived().LocalIntersection(ray, ptrSelf);
   }
 
-  constexpr auto IntersectWith(const Ray& ray,
-                               const ShapeWrapper* ptrSelf) const noexcept
-      -> IntxnRetVariant {
+  constexpr IntxnRetVariant IntersectWith(
+      const Ray& ray, const ShapeWrapper* ptrSelf) const noexcept {
     const auto invTransform = Inverse(transform);
     const auto tranformedRay = ray.Transform(invTransform);
     return LocalIntersection(tranformedRay, ptrSelf);
@@ -244,9 +243,8 @@ class Plane : public Shape<Plane> {
     return MakeVector(0, 1, 0);
   }
 
-  constexpr auto LocalIntersection(const Ray& ray,
-                                   const ShapeWrapper* ptrSelf) const noexcept
-      -> IntxnRetVariant {
+  constexpr IntxnRetVariant LocalIntersection(
+      const Ray& ray, const ShapeWrapper* ptrSelf) const noexcept {
     const float yDirection = ray.GetDirection()[TupleConstants::y];
     if (MathUtils::ConstExprAbsf(yDirection) < EPSILON)
       return IntxnRetVariant(
@@ -274,9 +272,8 @@ class Sphere : public Shape<Sphere> {
     return ToNormalizedVector(point - PredefinedTuples::ZeroPoint);
   }
 
-  constexpr auto LocalIntersection(const Ray& ray,
-                                   const ShapeWrapper* ptrSelf) const noexcept
-      -> IntxnRetVariant {
+  constexpr IntxnRetVariant LocalIntersection(
+      const Ray& ray, const ShapeWrapper* ptrSelf) const noexcept {
     // Caculate distance between sphere to ray origin points assuming sphere's center located at world origin.
     const auto sphereToRay = ray.GetOrigin() - PredefinedTuples::ZeroPoint;
     const auto rayDir = ray.GetDirection();
@@ -337,7 +334,7 @@ class ShapeWrapper {
         shapeObject);
   }
 
-  constexpr auto IntersectWith(const Ray& ray) const -> IntxnRetVariant {
+  constexpr IntxnRetVariant IntersectWith(const Ray& ray) const {
     return std::visit(
         [&](auto const& elem) { return elem.IntersectWith(ray, this); },
         shapeObject);

@@ -23,7 +23,12 @@ struct NumXSOf<Plane, Ts...> {
       ShapeTraits::PlaneTrait::NumIntersections + NumXSOf<Ts...>::numXS;
 };
 
-template <class ShapeContainer, class LightContainer, std::size_t NumXS_ = 10>
+template <typename ShapeContainer, typename LightContainer,
+          std::size_t NXs = 10>
+requires requires() {
+  // number of possible intersections should > 0 for valid ray intersection result
+  requires NXs > 0;
+}
 class World {
  public:
   constexpr World(ShapeContainer&& shapeContainer,
@@ -31,7 +36,7 @@ class World {
       : shapes{std::forward<ShapeContainer>(shapeContainer)},
         lights{std::forward<LightContainer>(lightContainer)} {}
 
-  static constexpr std::size_t NumXS{NumXS_};
+  static constexpr std::size_t NumXS{NXs};
 
   constexpr auto IntersectWithRay(const Ray& ray) const
       -> std::array<Intersection, NumXS> {
@@ -40,7 +45,7 @@ class World {
     for (int i = 0; i < shapes.size(); i++) {
       const auto variant = shapes[i].IntersectWith(ray);
       auto visitor = [&](auto&& v) {
-        using T = PrimitiveTraits::uncvref_t<decltype(v)>;
+        using T = PrimitiveTraits::RemoveCVR<decltype(v)>;
         if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
           const auto xs = std::get<StaticVector<Intersection, 2>>(variant);
           for (std::size_t i = 0; i < 2; i++)

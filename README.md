@@ -1,4 +1,4 @@
-# Compile-Time-RayTracerChallenge (CTRTC)
+# Compile-Time-RayTracerChallenge (ctrtc)
 Ray tracer implementation in C++ inspired by Jamis Buck's book "The Ray Tracer Challenge".
 
 This is a C++20 ray tracer project using constexpr function evaluation to make all computation happend entirely at compile-time.
@@ -15,7 +15,7 @@ This is a C++20 ray tracer project using constexpr function evaluation to make a
 Compiler | Version
 ---------|--------
 GCC      | 12.1.0
-clang    | 14.0.0
+clang    | 15.0.0
 
 With Ubuntu 22.04 (the O.S I used), one could easily install and setup enviorments needed for this project by:
 ```bash
@@ -27,9 +27,9 @@ sudo apt-get install -y libgtest-dev
 # Install g++20 and setup  
 sudo apt-get install -y g++-12 gcc-12
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12 --slave /usr/bin/gcov gcov /usr/bin/gcov-12
-# (optional) or install clang14 if you want
-sudo apt-get install -y clang-14
-sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-14 40
+# (optional) or install clang15 if you want
+sudo apt-get install -y clang-15
+sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-15 40
 ```
 
 **WARNING**
@@ -41,7 +41,7 @@ sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-14 40
 ## Build and run test suite
 Use the following commands from the project's top-most directory to run the test suite.
 ```bash
-cd CTRTC
+cd ctrtc
 make clean # for tidy check
 make test=1
 make run-test
@@ -52,7 +52,7 @@ If you want to complete the render at compile time, all calculations have to be 
 <p>
 
 ```bash
-cd CTRTC
+cd ctrtc
 make clean # for tidy check
 make CH=5 # render at run time
 # ---or render at compile time, this would take up ~30 min to finish ---#
@@ -69,7 +69,7 @@ make CH=5 STATIC=1
 <p>
 
 ```bash
-cd CTRTC
+cd ctrtc
 make clean # for tidy check
 make CH=6 # render at run time
 # ---or render at compile time, this would take up ~30 min to finish
@@ -87,7 +87,7 @@ make CH=6 STATIC=1
 <p>
 
 ```bash
-cd CTRTC
+cd ctrtc
 make clean # for tidy check
 make CH=7 # render at run time
 # ---or render at compile time, this would take up ~30 min to finish
@@ -105,7 +105,7 @@ make CH=7 STATIC=1
 <p>
 
 ```bash
-cd CTRTC
+cd ctrtc
 make clean # for tidy check
 make CH=8 # render at run time
 # ---or render at compile time, this would take up ~30 min to finish
@@ -123,7 +123,7 @@ make CH=8 STATIC=1
 <p>
 
 ```bash
-cd CTRTC
+cd ctrtc
 make clean # for tidy check
 make CH=9 # render at run time
 # ---or render at compile time, this would take up ~30 min to finish
