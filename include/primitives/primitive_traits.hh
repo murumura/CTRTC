@@ -1,8 +1,13 @@
 #ifndef PRITRAITS_HH
 #define PRITRAITS_HH
+#include <concepts>
 #include <type_traits>
 namespace RayTracer {
 namespace PrimitiveTraits {
+
+template <typename T>
+concept Arithmetic = std::is_arithmetic_v<T>;
+
 template <typename T, T... v>
 struct AllSameValue {};
 

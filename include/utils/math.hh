@@ -1,6 +1,7 @@
 #ifndef MATH_HH
 #define MATH_HH
 #include <cmath>
+#include <concepts>
 #include <numeric>
 #include <optional>
 #include <type_traits>
@@ -21,8 +22,8 @@ constexpr T NINF = -std::numeric_limits<T>::infinity();
 };  // namespace MathConstants
 
 /* Constexpr square root value for floating point value. */
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T ConstExprSqrtf(T x) {
+template <std::floating_point T>
+constexpr T ConstExprSqrtf(T x) {
   if (x >= 0 && x < std::numeric_limits<T>::infinity()) {
     T curr{x}, prev{0.0f};
     while (curr != prev) {
@@ -36,14 +37,13 @@ requires(std::is_floating_point_v<T>) constexpr T ConstExprSqrtf(T x) {
 }
 
 /* constexpr absolute value of a floating point value. */
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T ConstExprAbsf(T val) {
+template <std::floating_point T>
+constexpr T ConstExprAbsf(T val) {
   return val < static_cast<T>(0) ? -val : val;
 }
 
-template <typename S, typename T>
-requires(std::is_floating_point_v<S> ||
-         std::is_floating_point_v<T>) constexpr bool ApproxEqual(S x, T y) {
+template <std::floating_point S, std::floating_point T>
+constexpr bool ApproxEqual(S x, T y) {
   // We need special treatment for infinities here.
   if (x == std::numeric_limits<S>::infinity() &&
       y == std::numeric_limits<S>::infinity())
@@ -56,8 +56,8 @@ requires(std::is_floating_point_v<S> ||
 
 // test whether values are within machine epsilon, used for algorithm
 // termination
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T Feq(T x, T y) {
+template <std::floating_point T>
+constexpr T Feq(T x, T y) {
   return ConstExprAbsf(x - y) <= std::numeric_limits<T>::epsilon();
 }
 
@@ -90,9 +90,8 @@ requires(std::conjunction_v<std::is_arithmetic<
  * @param xProduct: product term of x, e.g x^2, x^4, ...
  * @return Traiangle expannsion value
  */
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T
-    TaylorSeries(T x, T sum, T fact, int i, int sign, T xProduct) {
+template <std::floating_point T>
+constexpr T TaylorSeries(T x, T sum, T fact, int i, int sign, T xProduct) {
   // clang-format off
             return Feq(sum, sum + xProduct * sign / fact) ? sum : \
                 TaylorSeries(x, sum + xProduct * sign / fact, fact * i * (i + 1), i + 2, -sign, xProduct * x * x);
@@ -100,8 +99,8 @@ requires(std::is_floating_point_v<T>) constexpr T
 }
 
 /* Constexpr calculation sin by Taylor series expansion */
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T Sine(T rad) {
+template <std::floating_point T>
+constexpr T Sine(T rad) {
   // sinx = x - \frac{x^3}{3!} + \frac{x^5}{5!} - ...
   int sign = -1;
   int idx = 4;
@@ -111,8 +110,8 @@ requires(std::is_floating_point_v<T>) constexpr T Sine(T rad) {
 }
 
 /* Constexpr calculation cos by Taylor series expansion */
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T Cosine(T rad) {
+template <std::floating_point T>
+constexpr T Cosine(T rad) {
   // cosx = 1.0 - \frac{x^2}{2!} + \frac{x^4}{4!} - ...
   int sign = -1;
   int idx = 3;
@@ -122,15 +121,14 @@ requires(std::is_floating_point_v<T>) constexpr T Cosine(T rad) {
 }
 
 /* Constexpr calculation cos by Taylor series expansion */
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T Tangent(T rad) {
+template <std::floating_point T>
+constexpr T Tangent(T rad) {
   return Sine(rad) / Cosine(rad);
 }
 
 //! computes base^exponent, base to the power of exponent (with an integer exponent)
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr T
-    ConstExprExp(const T base, const int32_t exponent) {
+template <std::floating_point T>
+constexpr T ConstExprExp(const T base, const int32_t exponent) {
   T ret = (T)1;
   for (int32_t i = 0; i < exponent; ++i) {
     ret *= base;
@@ -138,9 +136,8 @@ requires(std::is_floating_point_v<T>) constexpr T
   return ret;
 }
 
-template <typename T>
-requires(std::is_floating_point_v<T>) constexpr std::optional<
-    std::pair<T, T>> SolveQuadratic(T a, T b, T c) {
+template <std::floating_point T>
+constexpr std::optional<std::pair<T, T>> SolveQuadratic(T a, T b, T c) {
   T discriminant = (b * b) - (4.0 * a * c);
   if (ConstExprAbsf(discriminant) < 1e-4) {
     // Discriminant is 0, we have two equal roots

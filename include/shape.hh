@@ -86,7 +86,7 @@ constexpr bool operator<(const Intersection& lhs, const Intersection& rhs) {
 namespace IntersectionUtils {
 template <typename... Args>
 requires(
-    std::is_same_v<
+    std::same_as<
         std::decay_t<Args>,
         Intersection>&&...) constexpr auto AggregateIntersection(Args&&... args) {
   auto result = std::array{std::forward<Args>(args)...};
@@ -104,7 +104,7 @@ requires(
 
 template <typename IntersectionList>
 requires(
-    std::is_same_v<
+    std::same_as<
         typename IntersectionList::value_type,
         Intersection>) constexpr auto SortIntersections(IntersectionList&
                                                             intersections) noexcept {
@@ -122,7 +122,7 @@ requires(
 }
 
 template <typename IntersectionList>
-requires(std::is_same_v<typename IntersectionList::value_type, Intersection>)
+requires(std::same_as<typename IntersectionList::value_type, Intersection>)
     [[nodiscard]] constexpr std::optional<Intersection> VisibleHit(
         IntersectionList intersections) noexcept {
   if (intersections.size() == 0)
@@ -146,11 +146,11 @@ requires(std::is_same_v<typename IntersectionList::value_type, Intersection>)
     const IntxnRetVariant& variant) noexcept {
   auto visitor = [&](auto&& v) {
     using T = PrimitiveTraits::RemoveCVR<decltype(v)>;
-    if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
+    if constexpr (std::same_as<T, StaticVector<Intersection, 2>>) {
       const auto xs = std::get<StaticVector<Intersection, 2>>(variant);
       const auto ret = VisibleHit(xs);
       return ret;
-    } else if constexpr (std::is_same_v<T, StaticVector<Intersection, 1>>) {
+    } else if constexpr (std::same_as<T, StaticVector<Intersection, 1>>) {
       const auto xs = std::get<StaticVector<Intersection, 1>>(variant);
       const auto ret = VisibleHit(xs);
       return ret;

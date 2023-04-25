@@ -2,7 +2,6 @@
 #define VEC_HH
 #include <array>
 #include <primitive_traits.hh>
-#include <type_traits>
 #include <utils/math.hh>
 namespace RayTracer {
 
@@ -23,8 +22,8 @@ struct ColourConstants {
   constexpr static int MaxValue = 255;
 };
 
-template <typename T, std::size_t N>
-requires(std::is_arithmetic_v<T>) class Vec final {
+template <PrimitiveTraits::Arithmetic T, std::size_t N>
+class Vec final {
  public:
   static_assert(N > 0, "vector must contain at least one element");
   using ValueType = T;

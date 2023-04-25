@@ -2,7 +2,7 @@
 #define STATIC_VEC_HH
 #include <array>
 #include <cassert>
-#include <type_traits>
+#include <concepts>
 namespace RayTracer {
 
 template <typename T, std::size_t Size>
@@ -21,7 +21,7 @@ class StaticVector : protected std::array<T, Size> {
   static constexpr size_type max_size = Size;
 
   template <typename InputIt>
-  requires(!std::is_same_v<InputIt, value_type>) constexpr StaticVector(
+  requires(!std::same_as<InputIt, value_type>) constexpr StaticVector(
       const InputIt& first, const InputIt& last) noexcept {
     InputIt it = first;
     while (it != last) {
@@ -31,7 +31,7 @@ class StaticVector : protected std::array<T, Size> {
   }
 
   template <typename... Args>
-  requires(std::is_same_v<Args, value_type>&&...) constexpr StaticVector(
+  requires(std::same_as<Args, value_type>&&...) constexpr StaticVector(
       Args&&... args)
       : storage_type{std::forward<Args>(args)...}, m_size{sizeof...(Args)} {}
 

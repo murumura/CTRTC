@@ -8,8 +8,8 @@
 #include <utils/math.hh>
 namespace RayTracer {
 
-template <typename T, std::size_t R, std::size_t C>
-requires(std::is_arithmetic_v<T>) class Matrix {
+template <PrimitiveTraits::Arithmetic T, std::size_t R, std::size_t C>
+class Matrix {
  public:
   static_assert(C > 0 && R > 0);
   static constexpr std::size_t Rows = R;
@@ -368,7 +368,7 @@ constexpr T Determinant(const Matrix<T, N, N>& mat) {
 
 template <typename T, std::size_t N>
 constexpr bool Invertible(const Matrix<T, N, N>& mat) {
-  return !MathUtils::ApproxEqual(Determinant(mat), 0);
+  return !MathUtils::ApproxEqual(Determinant(mat), 0.0);
 }
 
 template <typename T, std::size_t N>

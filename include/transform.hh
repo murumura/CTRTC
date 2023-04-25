@@ -69,8 +69,7 @@ class Transform : public TransformMatrix {
    * NOTE: Apply chaining in reverse order
    */
   template <typename... Args>
-  requires(
-      std::is_same_v<Transform, std::decay_t<Args>>&&...) constexpr Transform
+  requires(std::same_as<Transform, std::decay_t<Args>>&&...) constexpr Transform
       Chain(Args&&... args) {
     return (... * args) * (*this);
   }

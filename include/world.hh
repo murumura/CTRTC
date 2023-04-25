@@ -46,11 +46,11 @@ class World {
       const auto variant = shapes[i].IntersectWith(ray);
       auto visitor = [&](auto&& v) {
         using T = PrimitiveTraits::RemoveCVR<decltype(v)>;
-        if constexpr (std::is_same_v<T, StaticVector<Intersection, 2>>) {
+        if constexpr (std::same_as<T, StaticVector<Intersection, 2>>) {
           const auto xs = std::get<StaticVector<Intersection, 2>>(variant);
           for (std::size_t i = 0; i < 2; i++)
             ret[iter++] = std::move(xs[i]);
-        } else if constexpr (std::is_same_v<T, StaticVector<Intersection, 1>>) {
+        } else if constexpr (std::same_as<T, StaticVector<Intersection, 1>>) {
           const auto xs = std::get<StaticVector<Intersection, 1>>(variant);
           ret[iter++] = std::move(xs[0]);
         }
