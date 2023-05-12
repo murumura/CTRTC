@@ -66,3 +66,25 @@ TEST(Math, solve_quadratic) {
   constexpr auto res3 = SolveQuadratic(a3, b3, c3);
   EXPECT_EQ(res3, std::nullopt);
 }
+
+TEST(Math, modulo) {
+  constexpr auto x1 = 4.0;
+  constexpr auto x2 = 2.0;
+  constexpr auto x3 = 3.0;
+  constexpr auto x4 = 7.0;
+  constexpr auto y1 = 3.0;
+  constexpr auto y2 = 1.0;
+  constexpr auto y3 = 4.0;
+  constexpr auto y4 = 5.0;
+  constexpr auto m1 = Modulo(x1, y1);
+  EXPECT_EQ(m1, 1.0);
+
+  constexpr auto m2 = Modulo(x2, y2);
+  EXPECT_EQ(m2, 0.0);
+
+  constexpr auto m3 = Modulo(x3, y3);
+  EXPECT_EQ(m3, 3.0);
+
+  constexpr auto m4 = Modulo(x4, y4);
+  EXPECT_EQ(m4, 2.0);
+}

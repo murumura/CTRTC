@@ -6,13 +6,18 @@
 #include <primitives/static_base.hh>
 #include <primitives/static_vector.hh>
 #include <ray.hh>
-#include <shading.hh>
+
 #include <utils/math.hh>
 #include <variant>
+
 namespace RayTracer {
 
 enum ShapeType { SphereTag, PlaneTag, None };
+enum PatternType { StripeTag, EmptyTag };
 
+class PatternWrapper;
+class EmptyPattern;
+class StridePattern;
 class ShapeWrapper;
 
 struct HitRecord {
@@ -161,6 +166,134 @@ requires(std::same_as<typename IntersectionList::value_type, Intersection>)
 }
 
 }  // namespace IntersectionUtils
+
+template <typename T>
+class Pattern : public StaticBase<T, Pattern> {
+ public:
+  constexpr Pattern()
+      : transform{PredefinedMatrices::I<double, 4>},
+        colourA{PredefinedColours::WHITE},
+        colourB{PredefinedColours::BLACK} {}
+
+  constexpr Pattern(const Transform& transform_)
+      : transform{transform_},
+        colourA{PredefinedColours::WHITE},
+        colourB{PredefinedColours::BLACK} {}
+
+  constexpr Pattern(
+      const Colour& colourA_, const Colour& colourB_,
+      const Transform& transform_ = PredefinedMatrices::I<double, 4>)
+      : colourA{colourA_}, colourB{colourB_}, transform{transform_} {}
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    return this->derived().StrideAt(point);
+  }
+
+  [[nodiscard]] constexpr Colour StrideAtObject(const ShapeWrapper& object,
+                                                const Tuple& worldPoint) const;
+
+  constexpr PatternType GetPatternType() const {
+    return this->derived().GetPatternType();
+  }
+
+  constexpr Transform GetTransform() const { return transform; }
+
+  Transform transform{PredefinedMatrices::I<double, 4>};
+  Colour colourA{PredefinedColours::WHITE}, colourB{PredefinedColours::BLACK};
+};
+
+class StridePattern : public Pattern<StridePattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return StripeTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    if (MathUtils::ApproxEqual(
+            MathUtils::Modulo(MathUtils::Floor(point[TupleConstants::x]), 2.0),
+            0.0))
+      return colourA;
+    else
+      return colourB;
+  }
+};
+
+class EmptyPattern : public Pattern<EmptyPattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return EmptyTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    return PredefinedColours::BLACK;
+  }
+};
+
+class PatternWrapper {
+ public:
+  template <typename T>
+  constexpr PatternWrapper(T&& elem) : patternObject{std::forward<T>(elem)} {}
+
+  constexpr PatternType GetPatternType() const {
+    return std::visit(
+        [&](auto const& elem) -> decltype(auto) {
+          return elem.GetPatternType();
+        },
+        patternObject);
+  }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    return std::visit(
+        [&](auto const& elem) -> decltype(auto) {
+          return elem.StrideAt(point);
+        },
+        patternObject);
+  }
+
+  [[nodiscard]] constexpr Colour StrideAtObject(const ShapeWrapper& object,
+                                                const Tuple& worldPoint) const;
+  // clang-format off
+  std::variant<StridePattern, EmptyPattern> patternObject;
+  // clang-format on
+};
+
+class PointLight {
+ public:
+  Tuple position;
+  Colour intensity;
+  constexpr PointLight(const Tuple& position_,
+                       const Colour& intensity_) noexcept
+      : position{position_}, intensity{intensity_} {}
+
+  constexpr friend bool operator==(const PointLight& lhs,
+                                   const PointLight& rhs) noexcept {
+    // clang-format off
+            return lhs.position == rhs.position && 
+                lhs.intensity == rhs.intensity ;
+    // clang-format on
+  }
+};
+
+class Material {
+ public:
+  Colour color{PredefinedColours::WHITE};
+  double ambient{0.1};
+  double diffuse{0.9};
+  double specular{0.9};
+  double shininess{200.0};
+  PatternWrapper pattern{EmptyPattern{}};
+
+  constexpr bool HasPattern() const {
+    return pattern.GetPatternType() != EmptyTag;
+  }
+
+  constexpr friend bool operator==(const Material& lhs,
+                                   const Material& rhs) noexcept {
+    // clang-format off
+            return lhs.color == rhs.color && 
+                lhs.ambient == rhs.ambient && 
+                lhs.diffuse == rhs.diffuse && 
+                lhs.specular == rhs.specular && 
+                lhs.shininess == rhs.shininess;
+    // clang-format on
+  }
+};
 
 template <typename T>
 class Shape : public StaticBase<T, Shape> {
@@ -343,6 +476,25 @@ class ShapeWrapper {
   std::variant<Sphere, Plane> shapeObject;
 };
 
+template <typename T>
+constexpr Colour Pattern<T>::StrideAtObject(const ShapeWrapper& object,
+                                            const Tuple& worldPoint) const {
+  const auto invObjectTrans = Inverse(object.GetTransform());
+  const auto invPatternTrans = Inverse(this->GetTransform());
+  const Tuple objectPoint = invObjectTrans * worldPoint;
+  const Tuple patternPoint = invPatternTrans * objectPoint;
+  return this->StrideAt(patternPoint);
+}
+
+constexpr Colour PatternWrapper::StrideAtObject(const ShapeWrapper& object,
+                                                const Tuple& worldPoint) const {
+  return std::visit(
+      [&](auto const& elem) -> decltype(auto) {
+        return elem.StrideAtObject(object, worldPoint);
+      },
+      patternObject);
+}
+
 constexpr ShapeType Intersection::GetShapeType() const {
   return shapePtr->GetShapeType();
 }
@@ -359,6 +511,53 @@ constexpr HitRecord Intersection::PrepareComputation(const Ray& ray) const {
   returnRec.normalV = returnRec.inside ? -normalV : normalV;
   returnRec.pointOverSurface = returnRec.point + (returnRec.normalV * EPSILON);
   return returnRec;
+}
+
+[[nodiscard]] constexpr Colour lighting(const Material& material,
+                                        const ShapeWrapper& object,
+                                        const PointLight& light,
+                                        const Tuple& point, const Tuple& eye,
+                                        const Tuple& normal,
+                                        const bool inShadow = false) noexcept {
+  // get the color from the pattern (via StrideAtObject()) if the material has a pattern set
+  const Colour materialColour =
+      material.HasPattern() ? material.pattern.StrideAtObject(object, point)
+                            : material.color;
+
+  // combine the surface color with the light's color/intensity
+  const Colour effectiveColour = materialColour * light.intensity;
+
+  // find the direction to the light source
+  const Tuple lightDirection = ToNormalizedVector(light.position - point);
+
+  // compute the ambient contribution
+  const Colour ambient = effectiveColour * material.ambient;
+
+  // when the point is in shadow use only the ambient component
+  if (inShadow)
+    return ambient;
+
+  // light_dot_normal represent the cosine of the angle between the
+  // light vector and the normal vector.
+  // A negative number means the light is on the other side of the surface
+  const double lightDotNormal = lightDirection.DotProduct(normal);
+
+  // precompute for ambient contribution
+  const auto reflectv = -lightDirection.Reflect(normal);
+  const double reflectDotEye = reflectv.DotProduct(eye);
+
+  // compute the diffuse contribution
+  const auto diffuse =
+      (lightDotNormal < 0)
+          ? PredefinedColours::BLACK
+          : effectiveColour * material.diffuse * lightDotNormal;
+  // clang-format off
+       
+  const auto specular = (lightDotNormal < 0 || reflectDotEye <= 0) ? PredefinedColours::BLACK
+                    : light.intensity * material.specular * MathUtils::ConstExprExp(reflectDotEye, material.shininess);
+
+  // clang-format on
+  return ambient + diffuse + specular;
 }
 
 }  // namespace RayTracer

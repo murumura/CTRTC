@@ -1,6 +1,6 @@
 #include <camera.hh>
-#include <shading.hh>
-#include <shape.hh>
+
+#include <primitives.hh>
 #include <vec.hh>
 #include <world.hh>
 using namespace RayTracer;

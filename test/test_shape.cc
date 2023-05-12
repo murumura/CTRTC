@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <shape.hh>
+#include <primitives.hh>
 using namespace RayTracer;
 
 TEST(Sphere, normal_at_local_x_axis) {

@@ -49,8 +49,7 @@ set(project_headers
     ${CMAKE_SOURCE_DIR}/include/world.hh
     ${CMAKE_SOURCE_DIR}/include/ray.hh
     ${CMAKE_SOURCE_DIR}/include/camera.hh
-    ${CMAKE_SOURCE_DIR}/include/shape.hh
-    ${CMAKE_SOURCE_DIR}/include/shading.hh
+    ${CMAKE_SOURCE_DIR}/include/primitives.hh
 )
 if (BUILD_TESTS)
     add_subdirectory(test)

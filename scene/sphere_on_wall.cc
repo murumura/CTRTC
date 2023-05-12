@@ -1,5 +1,5 @@
 #include <canvas.hh>
-#include <shape.hh>
+#include <primitives.hh>
 #include <vec.hh>
 using namespace RayTracer;
 

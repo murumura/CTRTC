@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <limits>
-#include <shape.hh>
+#include <primitives.hh>
 using namespace RayTracer;
 using testing::Eq;
 

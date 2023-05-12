@@ -1,8 +1,7 @@
 #ifndef WORLD_HH
 #define WORLD_HH
 #include <concepts>
-#include <shading.hh>
-#include <shape.hh>
+#include <primitives.hh>
 #include <tuple>
 namespace RayTracer {
 
@@ -23,18 +22,22 @@ struct NumXSOf<Plane, Ts...> {
       ShapeTraits::PlaneTrait::NumIntersections + NumXSOf<Ts...>::numXS;
 };
 
-template <typename ShapeContainer, typename LightContainer,
-          std::size_t NXs = 10>
-requires requires() {
+template <typename ShapeContType, typename LightContType, std::size_t NXs = 10>
+requires requires(ShapeContType shapeArgs, LightContType lightArgs) {
   // number of possible intersections should > 0 for valid ray intersection result
   requires NXs > 0;
+  typename LightContType::difference_type;
+  typename ShapeContType::difference_type;
+  typename LightContType::size_type;
+  typename ShapeContType::size_type;
+  { shapeArgs.size() } -> std::same_as<typename ShapeContType::size_type>;
+  { lightArgs.size() } -> std::same_as<typename LightContType::size_type>;
 }
 class World {
  public:
-  constexpr World(ShapeContainer&& shapeContainer,
-                  LightContainer&& lightContainer)
-      : shapes{std::forward<ShapeContainer>(shapeContainer)},
-        lights{std::forward<LightContainer>(lightContainer)} {}
+  constexpr World(ShapeContType&& shapeArgs, LightContType&& lightArgs)
+      : shapes{std::forward<ShapeContType>(shapeArgs)},
+        lights{std::forward<LightContType>(lightArgs)} {}
 
   static constexpr std::size_t NumXS{NXs};
 
@@ -67,16 +70,16 @@ class World {
     // supporting multiple light sources
     for (int i = 0; i < lights.size(); i++) {
       bool isInShadow = IsShadowed(hitRecord.pointOverSurface, lights[i]);
-      color += lighting(hitRecord.shapePtr->GetMaterial(), lights[i],
-                        hitRecord.pointOverSurface, hitRecord.eyeV,
-                        hitRecord.normalV, isInShadow);
+        color += lighting(hitRecord.shapePtr->GetMaterial(), *hitRecord.shapePtr,
+                          lights[i], hitRecord.pointOverSurface, hitRecord.eyeV,
+                          hitRecord.normalV, isInShadow);
     }
     return color;
   }
 
   constexpr bool IsShadowed(const Tuple& point, const PointLight& light) const {
-    const Tuple v =
-        (light.position - point);  // direction vector from point to light
+    // direction vector from point to light
+    const Tuple v = (light.position - point);
     const double distance = v.Magnitude();
     const Tuple direction = ToNormalizedVector(v);
     const Ray shadowRay = Ray(point, direction);
@@ -112,19 +115,20 @@ class World {
     return false;
   }
 
-  constexpr ShapeContainer const& GetShapes() const { return shapes; }
+  constexpr ShapeContType const& GetShapes() const { return shapes; }
 
-  constexpr LightContainer const& GetLights() const { return lights; }
+  constexpr LightContType const& GetLights() const { return lights; }
 
-  ShapeContainer shapes;
-  LightContainer lights;
+  ShapeContType shapes;
+  LightContType lights;
 };
 
 namespace WorldUtils {
 
 constexpr auto DefaultWorld() {
   PointLight light = PointLight(MakePoint(-10, 10, -10), MakeColour(1, 1, 1));
-  std::array<PointLight, 1> lights = {light};
+  const std::size_t numLights = 1;
+  std::array<PointLight, numLights> lights = {light};
   Material m = []() {
     Material ret;
     ret.color = MakeColour(0.8, 1.0, 0.6);
@@ -135,6 +139,7 @@ constexpr auto DefaultWorld() {
   Sphere s1 = Sphere{m};
   Transform scale = MatrixUtils::Scale(0.5, 0.5, 0.5);
   Sphere s2 = Sphere{scale};
+  const std::size_t numShapes = 2;
   std::array<ShapeWrapper, 2> shapes = {s1, s2};
   const std::size_t numXS = NumXSOf<Sphere, Sphere>::numXS;
 

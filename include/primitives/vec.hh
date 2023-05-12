@@ -61,14 +61,12 @@ class Vec final {
   constexpr Vec CrossProduct(const Vec& rhs) const noexcept {
     static_assert(Length == 4,
                   "Cross product can only be performed on vector type");
-
-    return Vec{contents[TupleConstants::y] * rhs[TupleConstants::z] -
-                   contents[TupleConstants::z] * rhs[TupleConstants::y],
-               contents[TupleConstants::z] * rhs[TupleConstants::x] -
-                   contents[TupleConstants::x] * rhs[TupleConstants::z],
-               contents[TupleConstants::x] * rhs[TupleConstants::y] -
-                   contents[TupleConstants::y] * rhs[TupleConstants::x],
+    // clang-format off
+    return Vec{contents[TupleConstants::y] * rhs[TupleConstants::z] - contents[TupleConstants::z] * rhs[TupleConstants::y],
+               contents[TupleConstants::z] * rhs[TupleConstants::x] - contents[TupleConstants::x] * rhs[TupleConstants::z],
+               contents[TupleConstants::x] * rhs[TupleConstants::y] - contents[TupleConstants::y] * rhs[TupleConstants::x],
                TupleConstants::VectorFlag};
+    // clang-format on
   }
 
   constexpr Vec Reflect(const Vec& normal) const noexcept {
@@ -97,8 +95,7 @@ constexpr decltype(auto) CreateVector(Args... args) {
 
 /* Deduction guide for uniform initialization */
 template <typename T, typename... U>
-Vec(T, U...) -> Vec<std::enable_if_t<(std::is_same_v<T, U> && ...), T>,
-                    1 + sizeof...(U)>;
+requires(std::same_as<T, U>&&...) Vec(T, U...)->Vec<T, 1 + sizeof...(U)>;
 
 /* Deduction guide for uniform initialization */
 template <typename T, std::size_t N>

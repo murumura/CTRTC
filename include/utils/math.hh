@@ -1,10 +1,10 @@
 #ifndef MATH_HH
 #define MATH_HH
 #include <cmath>
-#include <concepts>
+#include <cstdint>
 #include <numeric>
 #include <optional>
-#include <type_traits>
+#include <primitive_traits.hh>
 #include <utility>
 #define EPSILON 1e-4
 namespace RayTracer {
@@ -62,7 +62,7 @@ constexpr T Feq(T x, T y) {
 }
 
 /* Constexpr calculation of digit number from single number */
-template <typename T>
+template <PrimitiveTraits::Arithmetic T>
 constexpr int NumOfDigitsHelper(T number) {
   int digits = 0;
   if (number < 0)
@@ -75,9 +75,8 @@ constexpr int NumOfDigitsHelper(T number) {
 }
 
 /* Constexpr calculation of digit number from packs of numbers */
-template <typename... Ts>
-requires(std::conjunction_v<std::is_arithmetic<
-             std::decay_t<Ts>>...>) constexpr int NumOfDigits(Ts... args) {
+template <PrimitiveTraits::Arithmetic... Ts>
+constexpr int NumOfDigits(Ts... args) {
   return (NumOfDigitsHelper(args) + ...);
 }
 
@@ -126,7 +125,7 @@ constexpr T Tangent(T rad) {
   return Sine(rad) / Cosine(rad);
 }
 
-//! computes base^exponent, base to the power of exponent (with an integer exponent)
+/*  computes base^exponent, base to the power of exponent (with an integer exponent) */
 template <std::floating_point T>
 constexpr T ConstExprExp(const T base, const int32_t exponent) {
   T ret = (T)1;
@@ -155,6 +154,23 @@ constexpr std::optional<std::pair<T, T>> SolveQuadratic(T a, T b, T c) {
   if (r1 > r2)
     std::swap(r1, r2);
   return std::pair(r1, r2);
+}
+
+template <std::floating_point T>
+constexpr T Modulo(const T x, const T y) {
+  return (x < T() ? T(-1) : T(1)) *
+         ((x < T() ? -x : x) -
+          static_cast<long long int>((x / y < T() ? -x / y : x / y)) *
+              (y < T() ? -y : y));
+}
+
+template <std::floating_point T>
+constexpr T Floor(const T val) {
+  // casting to int truncates the value, which is floor(val) for positive values,
+  // but we have to substract 1 for negative values (unless val is already floored == recasted int val)
+  const auto valInt = (int64_t)val;
+  const T fvalInt = (T)valInt;
+  return (val >= T() ? fvalInt : (val == fvalInt ? val : fvalInt - (T)1));
 }
 
 }  // namespace MathUtils
