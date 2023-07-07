@@ -34,7 +34,7 @@ TEST(Sphere, normal_vector_should_be_normalized) {
   EXPECT_EQ(n, ToNormalizedVector(n));
 }
 
-TEST(sphere, normal_on_a_translated_sphere) {
+TEST(Sphere, normal_on_a_translated_sphere) {
   constexpr Transform M = MatrixUtils::Translation(0, 1, 0);
   constexpr Sphere s{M};
   constexpr auto worldPoint = MakePoint(0, 1.70711, -0.70711);
@@ -42,7 +42,7 @@ TEST(sphere, normal_on_a_translated_sphere) {
   EXPECT_EQ(n, MakeVector(0, 0.70711, -0.70711));
 }
 
-TEST(sphere, normal_on_a_translated_sphere_2) {
+TEST(Sphere, normal_on_a_translated_sphere_2) {
   constexpr auto pi = MathUtils::MathConstants::PI<double>;
   constexpr double coord = MathUtils::ConstExprSqrtf(2.0) / 2;
   constexpr Transform M =
@@ -53,7 +53,7 @@ TEST(sphere, normal_on_a_translated_sphere_2) {
   EXPECT_EQ(n, MakeVector(0, 0.97014, -0.24254));
 }
 
-TEST(plane, normal_of_plane_constant_everywhere) {
+TEST(Plane, normal_of_plane_constant_everywhere) {
   constexpr Plane p;
   constexpr auto p1 = MakePoint(0, 0, 0);
   constexpr auto p2 = MakePoint(10, 0, -10);

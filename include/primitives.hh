@@ -13,10 +13,10 @@
 namespace RayTracer {
 
 enum ShapeType { SphereTag, PlaneTag, None };
-enum PatternType { StripeTag, EmptyTag };
+enum PatternType { StripeTag, GradientTag, TestTag };
 
 class PatternWrapper;
-class EmptyPattern;
+class TestPattern;
 class StridePattern;
 class ShapeWrapper;
 
@@ -68,6 +68,17 @@ class Intersection {
   constexpr ShapeType GetShapeType() const;
 };
 
+/*!
+ * \brief An "midway" class responsible for wrapping different shapes's 
+ * intersection result during rendering computation for unifying calling interface.
+ * 
+ * To account for different return type of intersection function by different shape objects.  
+ * (check out `ShapesTraits` class for detail) And to account for the case where "no-hitting" occurs
+ * the `IntxnRetVariant` could sometimes be empty, so any function that return a `IntxnRetVariant` 
+ * should further calling `VisibleHitFromVariant` (which first determing its holding value, and
+ * later calling `VisibleHit` and return most visible hits)
+ * as a underlying return type dispatching function.
+ */
 using IntxnRetVariant =
     std::variant<StaticVector<Intersection, 2>, StaticVector<Intersection, 1>>;
 
@@ -126,6 +137,12 @@ requires(
   return result;
 }
 
+/*!
+ * \brief Filter most and return visible hits from a collection of `Intersection` object (if any).
+ * \tparam IntersectionList container with value_type defined as `Intersection`
+ * \return Either return the encapsulation information `Intersection` from most visible 
+ * intersection point or nullopt if tracing ray totally missing from the shape object.
+ * */
 template <typename IntersectionList>
 requires(std::same_as<typename IntersectionList::value_type, Intersection>)
     [[nodiscard]] constexpr std::optional<Intersection> VisibleHit(
@@ -147,6 +164,11 @@ requires(std::same_as<typename IntersectionList::value_type, Intersection>)
              : std::optional{intersections[0]};
 }
 
+/*!
+ * \brief Filter most visible hits from `IntxnRetVariant` object 
+ * \return Either return the encapsulation information `Intersection` from most visible 
+ * intersection point or nullopt if tracing ray totally missing from the shape object.
+ * */
 [[nodiscard]] constexpr std::optional<Intersection> VisibleHitFromVariant(
     const IntxnRetVariant& variant) noexcept {
   auto visitor = [&](auto&& v) {
@@ -180,21 +202,33 @@ class Pattern : public StaticBase<T, Pattern> {
         colourA{PredefinedColours::WHITE},
         colourB{PredefinedColours::BLACK} {}
 
-  constexpr Pattern(
-      const Colour& colourA_, const Colour& colourB_,
-      const Transform& transform_ = PredefinedMatrices::I<double, 4>)
-      : colourA{colourA_}, colourB{colourB_}, transform{transform_} {}
-
   [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
     return this->derived().StrideAt(point);
   }
 
+  /*!
+  * \brief Return the color for the given pattern, on the given object at the
+  * given world-space point, and it should respect the transformations on both the
+  * pattern and the object while doing so.
+  * 
+  * \param object the shape object for evaluating stride colour with respect to its transformations 
+  * \param world point the stride point in world-coordinate for evaluating stride colour 
+  * \return colour of stride point
+  */
   [[nodiscard]] constexpr Colour StrideAtObject(const ShapeWrapper& object,
                                                 const Tuple& worldPoint) const;
 
   constexpr PatternType GetPatternType() const {
     return this->derived().GetPatternType();
   }
+
+  constexpr void SetTransform(const Transform& transform_) {
+    transform = transform_;
+  }
+
+  constexpr void SetColourA(const Colour& colourA_) { colourA = colourA_; }
+
+  constexpr void SetColourB(const Colour& colourB_) { colourB = colourB_; }
 
   constexpr Transform GetTransform() const { return transform; }
 
@@ -216,12 +250,28 @@ class StridePattern : public Pattern<StridePattern> {
   }
 };
 
-class EmptyPattern : public Pattern<EmptyPattern> {
+class TestPattern : public Pattern<TestPattern> {
  public:
-  constexpr PatternType GetPatternType() const { return EmptyTag; }
+  constexpr PatternType GetPatternType() const { return TestTag; }
 
   [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
-    return PredefinedColours::BLACK;
+    return MakeColour(point[TupleConstants::x], point[TupleConstants::y],
+                      point[TupleConstants::z]);
+  }
+};
+
+class GradientPattern : public Pattern<GradientPattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return GradientTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    // compute distance between the two colors
+    const Colour delta = colourB - colourA;
+    // compute the fractional portion of the x coordinate
+    const auto fraction = \
+        point[TupleConstants::x] - MathUtils::Floor(point[TupleConstants::x]);
+    // linearly interpolating from one to the other as the x coordinate changes
+    return colourA + (delta * fraction);
   }
 };
 
@@ -238,6 +288,16 @@ class PatternWrapper {
         patternObject);
   }
 
+  /*!
+  * \brief Return the color for PatternWrapper's underlying pattern type, 
+  * on the given object at the given point coordinate.
+  * 
+  * \note Assume underlying pattern type of PatternWrapper implements its own 
+  * `StrideAt` function.
+  * 
+  * \param point the stride point coordinate for evaluating stride colour 
+  * \return colour of stride point
+  */
   [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
     return std::visit(
         [&](auto const& elem) -> decltype(auto) {
@@ -246,11 +306,29 @@ class PatternWrapper {
         patternObject);
   }
 
+  constexpr Transform GetTransform() const {
+    return std::visit(
+        [&](auto const& elem) -> decltype(auto) { return elem.GetTransform(); },
+        patternObject);
+  }
+
+  /*!
+  * \brief Return the color for PatternWrapper's underlying pattern type, 
+  * on the given object at the given world-space point, and it should respect 
+  * the transformations on both the pattern and the object while doing so.
+  * 
+  * \note Assume underlying pattern type of PatternWrapper implements its own 
+  * `StrideAtObject` function.
+  * 
+  * \param object the shape object for evaluating stride colour with respect to its transformations 
+  * \param world point the stride point in world-coordinate for evaluating stride colour 
+  * \return colour of stride point
+  */
   [[nodiscard]] constexpr Colour StrideAtObject(const ShapeWrapper& object,
                                                 const Tuple& worldPoint) const;
-  // clang-format off
-  std::variant<StridePattern, EmptyPattern> patternObject;
-  // clang-format on
+
+  // Underlying pattern type of PatternWrapper
+  std::variant<StridePattern, GradientPattern, TestPattern> patternObject;
 };
 
 class PointLight {
@@ -264,8 +342,8 @@ class PointLight {
   constexpr friend bool operator==(const PointLight& lhs,
                                    const PointLight& rhs) noexcept {
     // clang-format off
-            return lhs.position == rhs.position && 
-                lhs.intensity == rhs.intensity ;
+      return lhs.position == rhs.position && 
+        lhs.intensity == rhs.intensity ;
     // clang-format on
   }
 };
@@ -277,10 +355,10 @@ class Material {
   double diffuse{0.9};
   double specular{0.9};
   double shininess{200.0};
-  PatternWrapper pattern{EmptyPattern{}};
+  PatternWrapper pattern{TestPattern{}};
 
   constexpr bool HasPattern() const {
-    return pattern.GetPatternType() != EmptyTag;
+    return pattern.GetPatternType() != TestTag;
   }
 
   constexpr friend bool operator==(const Material& lhs,
@@ -327,6 +405,7 @@ class Shape : public StaticBase<T, Shape> {
   constexpr void SetMaterial(const Material& material_) {
     material = material_;
   }
+
   constexpr Material GetMaterial() const { return material; }
 
   constexpr Transform GetTransform() const { return transform; }

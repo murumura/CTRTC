@@ -70,9 +70,9 @@ class World {
     // supporting multiple light sources
     for (int i = 0; i < lights.size(); i++) {
       bool isInShadow = IsShadowed(hitRecord.pointOverSurface, lights[i]);
-        color += lighting(hitRecord.shapePtr->GetMaterial(), *hitRecord.shapePtr,
-                          lights[i], hitRecord.pointOverSurface, hitRecord.eyeV,
-                          hitRecord.normalV, isInShadow);
+      color += lighting(hitRecord.shapePtr->GetMaterial(), *hitRecord.shapePtr,
+                        lights[i], hitRecord.pointOverSurface, hitRecord.eyeV,
+                        hitRecord.normalV, isInShadow);
     }
     return color;
   }
