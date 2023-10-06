@@ -5,7 +5,7 @@
 #include <vec.hh>
 using namespace RayTracer;
 template <std::size_t canvasPixels>
-constexpr auto renderStaticChapter4() {
+constexpr auto RenderStaticChapter4() {
   constexpr auto image = []() {
     Canvas<canvasPixels, canvasPixels> canvas;
     auto radius = 150;
@@ -43,6 +43,6 @@ constexpr auto renderStaticChapter4() {
 }
 int main() {
   static constexpr std::size_t canvasPixels = 400;
-  auto canvas = renderStaticChapter4<canvasPixels>();
+  auto canvas = RenderStaticChapter4<canvasPixels>();
   canvas.ToPPM("clock.ppm");
 }

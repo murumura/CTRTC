@@ -1,5 +1,6 @@
 #ifndef VEC_HH
 #define VEC_HH
+#include <algorithm>
 #include <array>
 #include <primitive_traits.hh>
 #include <utils/math.hh>
@@ -95,7 +96,7 @@ constexpr decltype(auto) CreateVector(Args... args) {
 
 /* Deduction guide for uniform initialization */
 template <typename T, typename... U>
-requires(std::same_as<T, U>&&...) Vec(T, U...)->Vec<T, 1 + sizeof...(U)>;
+requires(std::same_as<T, U>&&...) Vec(T, U...) -> Vec<T, 1 + sizeof...(U)>;
 
 /* Deduction guide for uniform initialization */
 template <typename T, std::size_t N>
@@ -548,6 +549,13 @@ constexpr bool IsValidColour(const Colour& colour) {
 
 constexpr Colour MakeColour(double r, double g, double b) {
   return Colour{r, g, b};
+}
+
+constexpr Colour ToValidColour(const Colour& colour) {
+  const double r = std::clamp(colour[ColourConstants::r], 0.0, 1.0);
+  const double g = std::clamp(colour[ColourConstants::g], 0.0, 1.0);
+  const double b = std::clamp(colour[ColourConstants::b], 0.0, 1.0);
+  return MakeColour(r, g, b);
 }
 
 struct PredefinedColours {

@@ -88,3 +88,41 @@ TEST(Math, modulo) {
   constexpr auto m4 = Modulo(x4, y4);
   EXPECT_EQ(m4, 2.0);
 }
+
+TEST(Math, floor) {
+  constexpr auto x1 = 2.0;
+  constexpr auto x2 = 2.01;
+  constexpr auto x3 = 2.99;
+  constexpr auto x4 = -2.7;
+
+  constexpr auto y1 = Floor(x1);
+  EXPECT_EQ(y1, 2.0);
+
+  constexpr auto y2 = Floor(x2);
+  EXPECT_EQ(y2, 2.0);
+
+  constexpr auto y3 = Floor(x3);
+  EXPECT_EQ(y3, 2.0);
+
+  constexpr auto y4 = Floor(x4);
+  EXPECT_EQ(y4, -3.0);
+}
+
+TEST(Math, ceil) {
+  constexpr auto x1 = 2.0;
+  constexpr auto x2 = 2.01;
+  constexpr auto x3 = 2.99;
+  constexpr auto x4 = -2.7;
+
+  constexpr auto y1 = Ceil(x1);
+  EXPECT_EQ(y1, 2.0);
+
+  constexpr auto y2 = Ceil(x2);
+  EXPECT_EQ(y2, 3.0);
+
+  constexpr auto y3 = Ceil(x3);
+  EXPECT_EQ(y3, 3.0);
+
+  constexpr auto y4 = Ceil(x4);
+  EXPECT_EQ(y4, -2.0);
+}

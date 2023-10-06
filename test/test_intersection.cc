@@ -18,7 +18,7 @@ TEST(SphereIntersection, aggregations) {
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr auto I1 = Intersection(2, &shapeWrapper);
   constexpr auto I2 = Intersection(1, &shapeWrapper);
-  constexpr auto xs = IntersectionUtils::AggregateIntersection(I1, I2);
+  constexpr auto xs = IntersectionUtils::AggregateIntersections(I1, I2);
   EXPECT_EQ(xs.size(), 2);
   EXPECT_EQ(xs[0], I2);
   EXPECT_EQ(xs[1], I1);
@@ -44,7 +44,7 @@ TEST(SphereIntersection, all_positive_distance) {
   static constexpr ShapeWrapper shapeWrapper = ShapeWrapper(sphere);
   constexpr auto I1 = Intersection(2, &shapeWrapper);
   constexpr auto I2 = Intersection(1, &shapeWrapper);
-  constexpr auto xs = IntersectionUtils::AggregateIntersection(I1, I2);
+  constexpr auto xs = IntersectionUtils::AggregateIntersections(I1, I2);
   constexpr auto I = IntersectionUtils::VisibleHit(xs);
   EXPECT_EQ(I, I2);
 }
@@ -56,7 +56,7 @@ TEST(SphereIntersection, some_negative_distance) {
   constexpr auto I2 = Intersection(4, &shapeWrapper);
   constexpr auto I3 = Intersection(-1, &shapeWrapper);
   constexpr auto I4 = Intersection(2, &shapeWrapper);
-  constexpr auto xs = IntersectionUtils::AggregateIntersection(I1, I2, I3, I4);
+  constexpr auto xs = IntersectionUtils::AggregateIntersections(I1, I2, I3, I4);
   EXPECT_EQ(xs[0], I4);
   EXPECT_EQ(xs[1], I2);
   EXPECT_EQ(xs[2], I1);
@@ -72,7 +72,7 @@ TEST(SphereIntersection, all_negative_distance) {
   constexpr auto I2 = Intersection(-4, &shapeWrapper);
   constexpr auto I3 = Intersection(-2, &shapeWrapper);
   constexpr auto I4 = Intersection(-3, &shapeWrapper);
-  constexpr auto xs = IntersectionUtils::AggregateIntersection(I1, I2, I3, I4);
+  constexpr auto xs = IntersectionUtils::AggregateIntersections(I1, I2, I3, I4);
   EXPECT_EQ(xs[0], I1);
   EXPECT_EQ(xs[1], I2);
   EXPECT_EQ(xs[2], I3);

@@ -8,6 +8,9 @@ namespace PrimitiveTraits {
 template <typename T>
 concept Arithmetic = std::is_arithmetic_v<T>;
 
+template <typename Ret, typename F, typename... Args>
+concept InvocableWithRetType = std::is_invocable_r_v<Ret, F, Args...>;
+
 template <typename T, T... v>
 struct AllSameValue {};
 

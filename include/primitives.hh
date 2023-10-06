@@ -13,7 +13,17 @@
 namespace RayTracer {
 
 enum ShapeType { SphereTag, PlaneTag, None };
-enum PatternType { StripeTag, GradientTag, TestTag };
+enum PatternType {
+  StripeTag,
+  GradientTag,
+  TestTag,
+  RingTag,
+  CheckerTag,
+  SolidTag,
+  RadialTag,
+  NestedTag,
+  BlendedTag
+};
 
 class PatternWrapper;
 class TestPattern;
@@ -100,11 +110,19 @@ constexpr bool operator<(const Intersection& lhs, const Intersection& rhs) {
 }
 
 namespace IntersectionUtils {
+
+/*!
+ * \brief  Sort pack of `Intersection` from near to far and 
+ * return them in form of array (if any).
+ * 
+ * \tparam Args Parameter pack of type `Intersection`
+ * \return Array of sorting hits from near to far.
+ * */
 template <typename... Args>
 requires(
     std::same_as<
         std::decay_t<Args>,
-        Intersection>&&...) constexpr auto AggregateIntersection(Args&&... args) {
+        Intersection>&&...) constexpr auto AggregateIntersections(Args&&... args) {
   auto result = std::array{std::forward<Args>(args)...};
   std::sort(result.begin(), result.end(),
             [](const Intersection& lhs, const Intersection& rhs) -> bool {
@@ -118,6 +136,13 @@ requires(
   return result;
 }
 
+/*!
+ * \brief  Sort collection of `Intersection` from near to far and 
+ * return them in form of array (if any).
+ * 
+ * \tparam container with value_type defined as `Intersection`
+ * \return Array of sorting hits from near to far.
+ * */
 template <typename IntersectionList>
 requires(
     std::same_as<
@@ -188,6 +213,17 @@ requires(std::same_as<typename IntersectionList::value_type, Intersection>)
 }
 
 }  // namespace IntersectionUtils
+
+template <typename JitterFn>
+[[nodiscard]] constexpr Tuple JitterPoint(JitterFn&& jitterFn,
+                                          const Tuple& point) {
+  if constexpr (PrimitiveTraits::InvocableWithRetType<Tuple, JitterFn,
+                                                      const Tuple&>) {
+    return jitterFn(point);
+  } else {
+    return point;
+  }
+}
 
 template <typename T>
 class Pattern : public StaticBase<T, Pattern> {
@@ -268,10 +304,79 @@ class GradientPattern : public Pattern<GradientPattern> {
     // compute distance between the two colors
     const Colour delta = colourB - colourA;
     // compute the fractional portion of the x coordinate
-    const auto fraction = \
+    const auto fraction =
         point[TupleConstants::x] - MathUtils::Floor(point[TupleConstants::x]);
     // linearly interpolating from one to the other as the x coordinate changes
     return colourA + (delta * fraction);
+  }
+};
+
+class RingPattern : public Pattern<RingPattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return RingTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    const auto pXSquare = point[TupleConstants::x] * point[TupleConstants::x];
+    const auto pZSquare = point[TupleConstants::z] * point[TupleConstants::z];
+    const double magnitude = MathUtils::ConstExprSqrtf(pXSquare + pZSquare);
+    if (MathUtils::ApproxEqual(
+            MathUtils::Modulo(MathUtils::Floor(magnitude), 2.0), 0.0))
+      return colourA;
+    else
+      return colourB;
+  }
+};
+
+class CheckerPattern : public Pattern<CheckerPattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return CheckerTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    const auto pX = MathUtils::Floor(point[TupleConstants::x]);
+    const auto pY = MathUtils::Floor(point[TupleConstants::y]);
+    const auto pZ = MathUtils::Floor(point[TupleConstants::z]);
+    if (MathUtils::ApproxEqual(
+            MathUtils::Modulo(MathUtils::Floor(pX + pY + pZ), 2.0), 0.0))
+      return colourA;
+    else
+      return colourB;
+  }
+};
+
+class SolidPattern : public Pattern<SolidPattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return SolidTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    return colourA;
+  }
+};
+
+class RadialGradientPattern : public Pattern<RadialGradientPattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return RadialTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    // compute distance between the two colors
+    const Colour delta = colourB - colourA;
+    const auto pXSquare = point[TupleConstants::x] * point[TupleConstants::x];
+    const auto pZSquare = point[TupleConstants::z] * point[TupleConstants::z];
+    const double magnitude = MathUtils::ConstExprSqrtf(pXSquare + pZSquare);
+    const Colour radialColor = colourA + (delta * magnitude);
+    // make sure color in valid range
+    if (!IsValidColour(radialColor)) {
+      return ToValidColour(radialColor);
+    } else
+      return radialColor;
+  }
+};
+
+class BlendedPattern : public Pattern<BlendedPattern> {
+ public:
+  constexpr PatternType GetPatternType() const { return BlendedTag; }
+
+  [[nodiscard]] constexpr Colour StrideAt(const Tuple& point) const {
+    return (colourA + colourB) * 0.5;
   }
 };
 
@@ -328,7 +433,10 @@ class PatternWrapper {
                                                 const Tuple& worldPoint) const;
 
   // Underlying pattern type of PatternWrapper
-  std::variant<StridePattern, GradientPattern, TestPattern> patternObject;
+  std::variant<StridePattern, GradientPattern, TestPattern, RingPattern,
+               CheckerPattern, SolidPattern, RadialGradientPattern,
+               BlendedPattern>
+      patternObject;
 };
 
 class PointLight {

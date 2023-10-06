@@ -173,6 +173,13 @@ constexpr T Floor(const T val) {
   return (val >= T() ? fvalInt : (val == fvalInt ? val : fvalInt - (T)1));
 }
 
+template <std::floating_point T>
+constexpr T Ceil(const T val) {
+  const auto valInt = (int64_t)val;
+  const T fvalInt = (T)valInt;
+  return (val == fvalInt ? fvalInt : fvalInt + ((val > 0) ? (T)1 : T()));
+}
+
 }  // namespace MathUtils
 }  // namespace RayTracer
 #endif
