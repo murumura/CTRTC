@@ -39,7 +39,7 @@ constexpr auto RenderStaticChapter6() {
           auto point = r.PositionAlong(nearestHit.GetIntersectDistance());
           auto normal = nearestHit.shapePtr->GetWorldNormalAt(point);
           auto eye = -r.GetDirection();
-          auto plotColor = lighting(m, light, point, eye, normal);
+          auto plotColor = Lighting(m, light, point, eye, normal);
           canvas(x, y) = plotColor;
         }
       }
@@ -95,7 +95,7 @@ int main() {
         auto point = r.PositionAlong(nearestHit.GetIntersectDistance());
         auto normal = nearestHit.shapePtr->GetWorldNormalAt(point);
         auto eye = -r.GetDirection();
-        auto plotColor = lighting(m, light, point, eye, normal);
+        auto plotColor = Lighting(m, light, point, eye, normal);
         canvas(x, y) = plotColor;
       }
     }

@@ -273,4 +273,11 @@ TEST(Pattern, jitter_point) {
   EXPECT_EQ(NojitterPt1, p1);
   EXPECT_EQ(NojitterPt2, p2);
   EXPECT_EQ(NojitterPt3, p3);
+  constexpr PerlinNoise<decltype(p1[TupleConstants::x])> perlinNoise;
+  constexpr Tuple jitterPt1 = JitterPoint(perlinNoise, p1);
+  constexpr Tuple jitterPt2 = perlinNoise(p2);
+  constexpr Tuple jitterPt3 = JitterPoint(perlinNoise, p3);
+  EXPECT_EQ(jitterPt1, p1);
+  EXPECT_NE(jitterPt2, p2);
+  EXPECT_NE(jitterPt3, p3);
 }

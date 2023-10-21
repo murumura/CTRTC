@@ -214,6 +214,170 @@ requires(std::same_as<typename IntersectionList::value_type, Intersection>)
 
 }  // namespace IntersectionUtils
 
+template <typename FT = double>
+requires(std::is_floating_point_v<
+         PrimitiveTraits::RemoveCVR<FT>>) class PerlinNoise {
+ public:
+  using T = PrimitiveTraits::RemoveCVR<FT>;
+  static constexpr std::array<uint8_t, 256> Permutation = {
+      151, 160, 137, 91,  90,  15,  131, 13,  201, 95,  96,  53,  194, 233, 7,
+      225, 140, 36,  103, 30,  69,  142, 8,   99,  37,  240, 21,  10,  23,  190,
+      6,   148, 247, 120, 234, 75,  0,   26,  197, 62,  94,  252, 219, 203, 117,
+      35,  11,  32,  57,  177, 33,  88,  237, 149, 56,  87,  174, 20,  125, 136,
+      171, 168, 68,  175, 74,  165, 71,  134, 139, 48,  27,  166, 77,  146, 158,
+      231, 83,  111, 229, 122, 60,  211, 133, 230, 220, 105, 92,  41,  55,  46,
+      245, 40,  244, 102, 143, 54,  65,  25,  63,  161, 1,   216, 80,  73,  209,
+      76,  132, 187, 208, 89,  18,  169, 200, 196, 135, 130, 116, 188, 159, 86,
+      164, 100, 109, 198, 173, 186, 3,   64,  52,  217, 226, 250, 124, 123, 5,
+      202, 38,  147, 118, 126, 255, 82,  85,  212, 207, 206, 59,  227, 47,  16,
+      58,  17,  182, 189, 28,  42,  223, 183, 170, 213, 119, 248, 152, 2,   44,
+      154, 163, 70,  221, 153, 101, 155, 167, 43,  172, 9,   129, 22,  39,  253,
+      19,  98,  108, 110, 79,  113, 224, 232, 178, 185, 112, 104, 218, 246, 97,
+      228, 251, 34,  242, 193, 238, 210, 144, 12,  191, 179, 162, 241, 81,  51,
+      145, 235, 249, 14,  239, 107, 49,  192, 214, 31,  181, 199, 106, 157, 184,
+      84,  204, 176, 115, 121, 50,  45,  127, 4,   150, 254, 138, 236, 205, 93,
+      222, 114, 67,  29,  24,  72,  243, 141, 128, 195, 78,  66,  215, 61,  156,
+      180};
+
+  /*!
+  * \brief Calculate gradient using Perlin noise hash.
+  */
+  [[nodiscard]] inline constexpr T Grad(const std::uint8_t hash, const T x,
+                                        const T y, const T z) const noexcept {
+    const std::uint8_t h = hash & 15;
+    const T u = h < 8 ? x : y;
+    const T v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+  }
+
+  inline constexpr int32_t FastFloor(const T fp) const {
+    int32_t i = static_cast<int32_t>(fp);
+    return (fp < i) ? (i - 1) : (i);
+  }
+
+  [[nodiscard]] inline constexpr uint8_t Hash(const int32_t i) const {
+    return Permutation[static_cast<uint8_t>(i)];
+  }
+
+  constexpr Tuple operator()(const Tuple& point) const {
+    const T pX = point[TupleConstants::x];
+    const T pY = point[TupleConstants::y];
+    const T pZ = point[TupleConstants::z];
+    T n0, n1, n2, n3;
+
+    constexpr T F3 = T(1.0 / 3.0);
+    constexpr T G3 = T(1.0 / 6.0);
+
+    // Very nice and simple skew factor for 3D
+    T jitter = (pX + pY + pZ) * F3;
+    int32_t i = FastFloor(pX + jitter);
+    int32_t j = FastFloor(pY + jitter);
+    int32_t k = FastFloor(pZ + jitter);
+    T t = (i + j + k) * G3;
+    // Unskew the cell origin back to (pX, pY, pZ) space
+    T X0 = i - t;
+    T Y0 = j - t;
+    T Z0 = k - t;
+    // The pX, pY, pZ distances from the cell origin
+    T x0 = pX - X0;
+    T y0 = pY - Y0;
+    T z0 = pZ - Z0;
+    // Offsets for second corner of simplex in (i,j,k) coords
+    int i1, j1, k1;
+    // Offsets for third corner of simplex in (i,j,k) coords
+    int i2, j2, k2;
+
+    // clang-format off
+    if (x0 >= y0) {
+      if (y0 >= z0) {
+        // X Y Z order
+        i1 = 1; j1 = 0; k1 = 0;
+        i2 = 1; j2 = 1; k2 = 0;  
+      } else if (x0 >= z0) {
+        // X Z Y order
+        i1 = 1; j1 = 0; k1 = 0;
+        i2 = 1; j2 = 0; k2 = 1;  
+      } else {
+        // Z X Y order
+        i1 = 0; j1 = 0; k1 = 1;
+        i2 = 1; j2 = 0; k2 = 1;  
+      }
+    } else {  // x0<y0
+      if (y0 < z0) {
+        // Z Y X order
+        i1 = 0; j1 = 0; k1 = 1;
+        i2 = 0; j2 = 1; k2 = 1;  
+      } else if (x0 < z0) {
+        // Y Z X order
+        i1 = 0; j1 = 1; k1 = 0;
+        i2 = 0; j2 = 1; k2 = 1;  
+      } else {
+        // Y X Z order
+        i1 = 0; j1 = 1; k1 = 0;
+        i2 = 1; j2 = 1; k2 = 0;  
+      }
+    }
+    // clang-format on
+
+    // Offsets for second corner in (x,y,z) coords
+    T x1 = x0 - T(i1) + G3;
+    T y1 = y0 - T(j1) + G3;
+    T z1 = z0 - T(k1) + G3;
+    // Offsets for third corner in (x,y,z) coords
+    T x2 = x0 - T(i2) + T(2.0) * G3;
+    T y2 = y0 - T(j2) + T(2.0) * G3;
+    T z2 = z0 - T(k2) + T(2.0) * G3;
+    // Offsets for last corner in (x,y,z) coords
+    T x3 = x0 - T(1.0) + T(3.0) * G3;
+    T y3 = y0 - T(1.0) + T(3.0) * G3;
+    T z3 = z0 - T(1.0) + T(3.0) * G3;
+
+    uint8_t gi0 = Hash(i + Hash(j + Hash(k)));
+    uint8_t gi1 = Hash(i + i1 + Hash(j + j1 + Hash(k + k1)));
+    uint8_t gi2 = Hash(i + i2 + Hash(j + j2 + Hash(k + k2)));
+    uint8_t gi3 = Hash(i + 1 + Hash(j + 1 + Hash(k + 1)));
+
+    // Calculate the contribution from the four corners
+    T t0 = 0.6f - x0 * x0 - y0 * y0 - z0 * z0;
+    if (t0 < 0) {
+      n0 = 0.0;
+    } else {
+      t0 *= t0;
+      n0 = t0 * t0 * Grad(gi0, x0, y0, z0);
+    }
+    T t1 = 0.6f - x1 * x1 - y1 * y1 - z1 * z1;
+    if (t1 < 0) {
+      n1 = 0.0;
+    } else {
+      t1 *= t1;
+      n1 = t1 * t1 * Grad(gi1, x1, y1, z1);
+    }
+    T t2 = 0.6f - x2 * x2 - y2 * y2 - z2 * z2;
+    if (t2 < 0) {
+      n2 = 0.0;
+    } else {
+      t2 *= t2;
+      n2 = t2 * t2 * Grad(gi2, x2, y2, z2);
+    }
+    T t3 = 0.6f - x3 * x3 - y3 * y3 - z3 * z3;
+    if (t3 < 0) {
+      n3 = 0.0;
+    } else {
+      t3 *= t3;
+      n3 = t3 * t3 * Grad(gi3, x3, y3, z3);
+    }
+
+    const T distortion = T(32.0) * (n0 + n1 + n2 + n3);
+    return MakePoint(pX + distortion, pY + distortion, pZ + distortion);
+  }
+};
+
+/*!
+ * \brief Perturb the given point using a jitter function if callable, 
+ *        otherwise return the original point.
+ * 
+ * \tparam JitterFn Type of the jitter function.
+ */
 template <typename JitterFn>
 [[nodiscard]] constexpr Tuple JitterPoint(JitterFn&& jitterFn,
                                           const Tuple& point) {
@@ -247,7 +411,7 @@ class Pattern : public StaticBase<T, Pattern> {
   * given world-space point, and it should respect the transformations on both the
   * pattern and the object while doing so.
   * 
-  * \param object the shape object for evaluating stride colour with respect to its transformations 
+  * \param object the shape object for evaluating stride colour with respect to its transformation.
   * \param world point the stride point in world-coordinate for evaluating stride colour 
   * \return colour of stride point
   */
@@ -463,10 +627,13 @@ class Material {
   double diffuse{0.9};
   double specular{0.9};
   double shininess{200.0};
-  PatternWrapper pattern{TestPattern{}};
+
+  const PatternWrapper* patternPtr{nullptr};
 
   constexpr bool HasPattern() const {
-    return pattern.GetPatternType() != TestTag;
+    if ((patternPtr == nullptr) || (patternPtr->GetPatternType() == TestTag))
+      return false;
+    return true;
   }
 
   constexpr friend bool operator==(const Material& lhs,
@@ -565,12 +732,12 @@ class Plane : public Shape<Plane> {
 
   constexpr IntxnRetVariant LocalIntersection(
       const Ray& ray, const ShapeWrapper* ptrSelf) const noexcept {
-    const float yDirection = ray.GetDirection()[TupleConstants::y];
+    const double yDirection = ray.GetDirection()[TupleConstants::y];
     if (MathUtils::ConstExprAbsf(yDirection) < EPSILON)
       return IntxnRetVariant(
           StaticVector<Intersection, 1>{Intersection(-1, nullptr)});
     else {
-      const float t = (-ray.GetOrigin()[TupleConstants::y]) / yDirection;
+      const double t = (-ray.GetOrigin()[TupleConstants::y]) / yDirection;
       return IntxnRetVariant(
           StaticVector<Intersection, 1>{Intersection(t, ptrSelf)});
     }
@@ -700,15 +867,16 @@ constexpr HitRecord Intersection::PrepareComputation(const Ray& ray) const {
   return returnRec;
 }
 
-[[nodiscard]] constexpr Colour lighting(const Material& material,
+[[nodiscard]] constexpr Colour Lighting(const Material& material,
                                         const ShapeWrapper& object,
                                         const PointLight& light,
                                         const Tuple& point, const Tuple& eye,
                                         const Tuple& normal,
                                         const bool inShadow = false) noexcept {
-  // get the color from the pattern (via StrideAtObject()) if the material has a pattern set
+  // get the color from the pattern (via StrideAtObject())
+  // if the material has associate pattern
   const Colour materialColour =
-      material.HasPattern() ? material.pattern.StrideAtObject(object, point)
+      material.HasPattern() ? material.patternPtr->StrideAtObject(object, point)
                             : material.color;
 
   // combine the surface color with the light's color/intensity
@@ -738,12 +906,13 @@ constexpr HitRecord Intersection::PrepareComputation(const Ray& ray) const {
       (lightDotNormal < 0)
           ? PredefinedColours::BLACK
           : effectiveColour * material.diffuse * lightDotNormal;
-  // clang-format off
-       
-  const auto specular = (lightDotNormal < 0 || reflectDotEye <= 0) ? PredefinedColours::BLACK
-                    : light.intensity * material.specular * MathUtils::ConstExprExp(reflectDotEye, material.shininess);
 
-  // clang-format on
+  const auto specular =
+      (lightDotNormal < 0 || reflectDotEye <= 0)
+          ? PredefinedColours::BLACK
+          : light.intensity * material.specular *
+                MathUtils::ConstExprExp(reflectDotEye, material.shininess);
+
   return ambient + diffuse + specular;
 }
 

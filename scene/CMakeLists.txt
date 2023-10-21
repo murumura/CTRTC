@@ -48,3 +48,11 @@ if ((${RENDER_CHAPTER} STREQUAL 9))
     )
     target_compile_options(CHAPTER9  PUBLIC  ${COMPILE_DEFINITIONS})
 endif()
+
+if ((${RENDER_CHAPTER} STREQUAL 10))
+    add_executable(CHAPTER10
+        ${project_headers}
+        pattern.cc
+    )
+    target_compile_options(CHAPTER10  PUBLIC  ${COMPILE_DEFINITIONS})
+endif()

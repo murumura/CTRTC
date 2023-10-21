@@ -40,7 +40,7 @@ TEST(Material, Lighting_with_the_eye_between_light_and_surface) {
   constexpr auto normalV = MakeVector(0, 0, -1);
   constexpr PointLight light{MakePoint(0, 0, -10), PredefinedColours::WHITE};
   constexpr auto result =
-      lighting(m, shapeWrapper, light, position, eyeV, normalV);
+      Lighting(m, shapeWrapper, light, position, eyeV, normalV);
   EXPECT_EQ(result, MakeColour(1.9, 1.9, 1.9));
 }
 
@@ -54,7 +54,7 @@ TEST(Material, eye_45_deg_offset) {
   constexpr auto normalV = MakeVector(0, 0, -1);
   constexpr PointLight light{MakePoint(0, 0, -10), PredefinedColours::WHITE};
   constexpr auto result =
-      lighting(m, shapeWrapper, light, position, eyeV, normalV);
+      Lighting(m, shapeWrapper, light, position, eyeV, normalV);
   EXPECT_EQ(result, MakeColour(1.0, 1.0, 1.0));
 }
 
@@ -67,7 +67,7 @@ TEST(Material, light_45_deg_offset) {
   constexpr auto normalV = MakeVector(0, 0, -1);
   constexpr PointLight light{MakePoint(0, 10, -10), PredefinedColours::WHITE};
   constexpr auto result =
-      lighting(m, shapeWrapper, light, position, eyeV, normalV);
+      Lighting(m, shapeWrapper, light, position, eyeV, normalV);
   EXPECT_EQ(result, MakeColour(0.7364, 0.7364, 0.7364));
 }
 
@@ -81,7 +81,7 @@ TEST(Material, eye_in_the_path_of_the_reflection_path) {
   constexpr auto normalV = MakeVector(0, 0, -1);
   constexpr PointLight light{MakePoint(0, 10, -10), PredefinedColours::WHITE};
   constexpr auto result =
-      lighting(m, shapeWrapper, light, position, eyeV, normalV);
+      Lighting(m, shapeWrapper, light, position, eyeV, normalV);
   EXPECT_EQ(result, MakeColour(1.6364, 1.6364, 1.6364));
 }
 
@@ -94,7 +94,7 @@ TEST(Material, light_behind_surface) {
   constexpr auto normalV = MakeVector(0, 0, -1);
   constexpr PointLight light{MakePoint(0, 0, 10), PredefinedColours::WHITE};
   constexpr auto result =
-      lighting(m, shapeWrapper, light, position, eyeV, normalV);
+      Lighting(m, shapeWrapper, light, position, eyeV, normalV);
   EXPECT_EQ(result, MakeColour(0.1, 0.1, 0.1));
 }
 
@@ -108,6 +108,6 @@ TEST(Material, light_with_surface_in_shadow) {
   constexpr bool inShadow = true;
   constexpr PointLight light{MakePoint(0, 0, 10), PredefinedColours::WHITE};
   constexpr auto result =
-      lighting(m, shapeWrapper, light, position, eyeV, normalV);
+      Lighting(m, shapeWrapper, light, position, eyeV, normalV);
   EXPECT_EQ(result, MakeColour(0.1, 0.1, 0.1));
 }
